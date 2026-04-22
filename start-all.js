@@ -1,0 +1,1 @@
+require('./clean-start.js');

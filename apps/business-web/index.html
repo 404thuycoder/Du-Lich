@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="WanderViệt Partner — Quản lý dịch vụ du lịch của doanh nghiệp bạn." />
+  <title>WanderViệt Partner — Kênh Doanh Nghiệp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="global-tokens.css?v=1776819067178" />
+  <link rel="stylesheet" href="styles.css?v=1776819067178" />
+  <link rel="stylesheet" href="business.css?v=1776819067178" />
+  <link rel="stylesheet" href="business-login.css?v=1776819067178" />
+  <script src="SharedUI.js?v=1776819067178"></script>
+</head>
+<body class="business-body">
+
+  <div class="biz-layout">
+    <!-- Sidebar -->
+    <aside class="biz-sidebar">
+      <div class="biz-sidebar-header">
+        <div class="logo">
+          <span class="logo-mark">◈</span>
+          WanderViệt <span class="badge-partner">BIZ</span>
+        </div>
+      </div>
+      <nav class="biz-nav">
+        <a href="#" class="biz-nav-item is-active" data-view="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Bảng điều khiển
+        </a>
+        <a href="#" class="biz-nav-item" data-view="services">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Dịch vụ của tôi
+        </a>
+        <a href="#" class="biz-nav-item" data-view="analytics">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Thống kê chi tiết
+        </a>
+        <a href="#" class="biz-nav-item" data-view="messages">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Tin nhắn khách hàng
+        </a>
+      </nav>
+      <div class="biz-sidebar-footer">
+        <a href="http://localhost:3000" class="biz-nav-item traveler-exit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Thoát chế độ Partner
+        </a>
+      </div>
+    </aside>
+
+    <main class="biz-content">
+      <header class="biz-content-header">
+        <div class="header-breadcrumb" id="biz-breadcrumb">Partner Dashboard / Tổng quan</div>
+        <div class="header-actions">
+           <!-- Notification Bell -->
+          <button type="button" class="btn-icon notif-btn-user" onclick="WanderUI.toggleNotificationDrawer()" aria-label="Thông báo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="wander-notif-badge" data-notif-badge></span>
+          </button>
+          <div class="biz-user-profile" id="biz-user-profile">
+            <img src="https://ui-avatars.com/api/?name=Partner&background=0284c7&color=fff" alt="Partner" class="biz-user-avatar" />
+            <span class="biz-user-name">Đang tải...</span>
+          </div>
+        </div>
+      </header>
+
+      <div id="dashboard-view" class="biz-view">
+        <!-- Stats Row -->
+        <div class="biz-stats-row">
+          <div class="stat-card">
+            <div class="stat-icon">👁️</div>
+            <div class="stat-info">
+              <div class="stat-val" id="stat-views">—</div>
+              <div class="stat-label">Tổng lượt xem</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-info">
+              <div class="stat-val" id="stat-reviews">—</div>
+              <div class="stat-label">Đánh giá nhận được</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🏨</div>
+            <div class="stat-info">
+              <div class="stat-val" id="stat-services">—</div>
+              <div class="stat-label">Dịch vụ đang chạy</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-info">
+              <div class="stat-val" id="stat-rating">—</div>
+              <div class="stat-label">Đánh giá trung bình</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Command Area / Quick Actions -->
+        <div class="biz-panel-title" style="margin-bottom: 1.5rem;">⚡ Trung tâm Lệnh & Chỉ dẫn</div>
+        <div class="biz-quick-actions">
+          <div class="action-card" onclick="WanderUI.showToast('Tính năng này đang được đồng bộ dữ liệu...', 'info')">
+            <div class="action-icon">📣</div>
+            <div class="action-label">Gửi khuyến mãi</div>
+            <div class="action-desc">Gửi thông báo ưu đãi tới khách hàng đã lưu điểm đến này.</div>
+          </div>
+          <div class="action-card" onclick="WanderUI.showToast('Vui lòng chọn dịch vụ bên dưới để cập nhật hình ảnh.', 'info')">
+            <div class="action-icon">🖼️</div>
+            <div class="action-label">Cập nhật ảnh 4K</div>
+            <div class="action-desc">Đồng bộ ảnh chất lượng cao lên trang chủ WanderViệt.</div>
+          </div>
+          <div class="action-card" onclick="WanderUI.showToast('Đang khởi tạo báo cáo doanh thu tháng...', 'info')">
+            <div class="action-icon">📊</div>
+            <div class="action-label">Xuất báo cáo</div>
+            <div class="action-desc">Tải dữ liệu lượt xem và phản hồi dưới dạng Excel/PDF.</div>
+          </div>
+
+        </div>
+
+        <!-- Service List -->
+        <div class="biz-panel">
+          <div class="biz-panel-header">
+            <h2 class="biz-panel-title">Dịch vụ của bạn</h2>
+            <button class="btn btn--primary" id="btn-add-service">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Đăng dịch vụ mới
+            </button>
+          </div>
+          <div class="biz-search-row">
+            <input type="search" id="biz-search" class="biz-search-input" placeholder="Tìm dịch vụ..." />
+          </div>
+          <div class="table-wrap">
+            <table class="biz-table">
+              <thead>
+                <tr>
+                  <th>Dịch vụ</th>
+                  <th>Phân loại</th>
+                  <th>Lượt quan tâm</th>
+                  <th>Đánh giá</th>
+                  <th>Trạng thái</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="services-tbody">
+                <tr><td colspan="6" class="table-empty">Đang tải...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /dashboard-view -->
+
+      <!-- ===== ANALYTICS VIEW ===== -->
+      <div id="analytics-view" class="biz-view" style="display:none">
+        <div class="biz-panel">
+          <div class="biz-panel-header">
+            <h2 class="biz-panel-title">📊 Thống kê chi tiết</h2>
+            <button class="btn btn--primary" id="btn-export-csv">⬇️ Xuất CSV</button>
+          </div>
+
+          <!-- Summary stats -->
+          <div class="biz-stats-row" id="analytics-stats-row">
+            <div class="stat-card">
+              <div class="stat-icon">👁️</div>
+              <div class="stat-info"><div class="stat-val" id="an-views">—</div><div class="stat-label">Tổng lượt xem</div></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">⭐</div>
+              <div class="stat-info"><div class="stat-val" id="an-reviews">—</div><div class="stat-label">Đánh giá nhận được</div></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">🏨</div>
+              <div class="stat-info"><div class="stat-val" id="an-services">—</div><div class="stat-label">Dịch vụ đang chạy</div></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">📊</div>
+              <div class="stat-info"><div class="stat-val" id="an-rating">—</div><div class="stat-label">Đánh giá trung bình</div></div>
+            </div>
+          </div>
+
+          <!-- Services breakdown table -->
+          <div style="margin-top:1.5rem;">
+            <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:1rem;">📋 Chi tiết từng dịch vụ</h3>
+            <div class="table-wrap">
+              <table class="biz-table">
+                <thead><tr>
+                  <th>Dịch vụ</th><th>Lượt xem</th><th>Đánh giá</th><th>Rating</th><th>Trạng thái</th>
+                </tr></thead>
+                <tbody id="analytics-tbody">
+                  <tr><td colspan="5" class="table-empty">Đang tải...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Promo send form -->
+          <div style="margin-top:2rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.5rem;">
+            <h3 style="font-size:0.95rem;font-weight:600;margin-bottom:1rem;">📣 Gửi khuyến mãi tới khách hàng</h3>
+            <form id="promo-form">
+              <div class="field" style="margin-bottom:0.75rem;">
+                <label style="font-size:0.8rem;color:#94a3b8;font-weight:600;">Tiêu đề thông báo</label>
+                <input type="text" id="promo-title" placeholder="VD: Giảm 20% cuối tuần này!" style="width:100%;padding:0.65rem 0.9rem;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;font-family:inherit;" />
+              </div>
+              <div class="field" style="margin-bottom:0.75rem;">
+                <label style="font-size:0.8rem;color:#94a3b8;font-weight:600;">Nội dung</label>
+                <textarea id="promo-message" rows="3" placeholder="Chi tiết ưu đãi..." style="width:100%;padding:0.65rem 0.9rem;border-radius:9px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#f1f5f9;font-family:inherit;resize:vertical;"></textarea>
+              </div>
+              <button type="submit" class="btn btn--primary">📨 Gửi thông báo</button>
+              <span id="promo-status" style="margin-left:1rem;font-size:0.85rem;"></span>
+            </form>
+          </div>
+        </div>
+      </div><!-- /analytics-view -->
+
+      <!-- ===== MESSAGES VIEW ===== -->
+      <div id="messages-view" class="biz-view" style="display:none">
+        <div class="biz-panel">
+          <div class="biz-panel-header">
+            <h2 class="biz-panel-title">💬 Phản hồi & Đánh giá từ khách</h2>
+            <span id="messages-count" style="font-size:0.8rem;color:#94a3b8;"></span>
+          </div>
+          <div id="messages-list" style="display:flex;flex-direction:column;gap:0.75rem;">
+            <div style="text-align:center;padding:3rem;color:#94a3b8;">Đang tải phản hồi...</div>
+          </div>
+        </div>
+        </div><!-- /messages-view -->
+    </main>
+  </div><!-- /biz-layout -->
+
+  <!-- Backdrop -->
+  <div class="biz-backdrop" id="biz-modal-backdrop" hidden></div>
+
+  <!-- Place Form Modal -->
+  <div class="biz-modal" id="modal-place-form" hidden>
+    <div class="biz-modal-inner">
+      <div class="biz-modal-header">
+        <h3 id="place-modal-title">Đăng Dịch Vụ Mới</h3>
+        <button class="btn-modal-close" data-close-modal aria-label="Đóng">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="biz-modal-body">
+        <form id="place-form" class="biz-form" novalidate>
+          <input type="hidden" name="id" />
+
+          <!-- Thông tin cơ bản -->
+          <div class="form-section">
+            <h4 class="form-section-title">📋 Thông tin cơ bản</h4>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-name">Tên cơ sở / dịch vụ <span class="req">*</span></label>
+                <input id="f-name" type="text" name="name" required placeholder="VD: Khách sạn Sun World, Tour Hội An..." />
+              </div>
+              <div class="field">
+                <label for="f-region">Khu vực (Tỉnh/Thành) <span class="req">*</span></label>
+                <input id="f-region" type="text" name="region" placeholder="Hà Nội, Đà Nẵng, Hội An..." />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-address">Địa chỉ cụ thể</label>
+              <input id="f-address" type="text" name="address" placeholder="Số nhà, đường, phường/xã..." />
+            </div>
+            <div class="field">
+              <label for="f-text">Mô tả chi tiết</label>
+              <textarea id="f-text" name="text" rows="3" placeholder="Giới thiệu về dịch vụ, điểm nổi bật, trải nghiệm..."></textarea>
+            </div>
+          </div>
+
+          <!-- Hình ảnh -->
+          <div class="form-section">
+            <h4 class="form-section-title">📸 Hình ảnh dịch vụ</h4>
+            <input type="hidden" name="images" id="hidden-biz-place-images" />
+            <div class="upload-dropzone" id="place-dropzone">
+              <input type="file" name="imageFile" id="place-image-input" accept="image/jpeg,image/png,image/webp" multiple hidden />
+              <div class="dropzone-prompt" onclick="document.getElementById('place-image-input').click()">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <p>Kéo thả ảnh hoặc <span class="link-text">bấm để chọn</span></p>
+                <small>JPG, PNG, WEBP — Tối đa 5MB/ảnh</small>
+              </div>
+              <div class="upload-preview-list" id="place-dropzone-preview"></div>
+            </div>
+          </div>
+
+          <!-- Phân loại & Giá -->
+          <div class="form-section">
+            <h4 class="form-section-title">🏷️ Phân loại & Giá</h4>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-budget">Mức giá (1=Bình dân, 4=Cao cấp)</label>
+                <select id="f-budget" name="budget">
+                  <option value="1">💰 Bình dân (dưới 200k)</option>
+                  <option value="2" selected>💰💰 Vừa phải (200k–500k)</option>
+                  <option value="3">💰💰💰 Khá (500k–1.5tr)</option>
+                  <option value="4">💰💰💰💰 Cao cấp (trên 1.5tr)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="f-pace">Nhịp độ trải nghiệm</label>
+                <select id="f-pace" name="pace">
+                  <option value="nhanh">⚡ Nhanh (thích hợp team building, tour nhanh)</option>
+                  <option value="vua" selected>🌿 Vừa phải (phổ biến nhất)</option>
+                  <option value="cham">🐢 Thư thái (nghỉ dưỡng, gia đình)</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-price-from">Giá từ (VNĐ)</label>
+                <input id="f-price-from" type="number" name="priceFrom" min="0" placeholder="VD: 200000" />
+              </div>
+              <div class="field">
+                <label for="f-price-to">Giá đến (VNĐ)</label>
+                <input id="f-price-to" type="number" name="priceTo" min="0" placeholder="VD: 500000" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-tags">Tags phân loại (cách bằng dấu phẩy)</label>
+              <input id="f-tags" type="text" name="tags" placeholder="Khách sạn, Biển, Sang trọng, Trẻ em..." />
+            </div>
+          </div>
+
+          <!-- Tiện ích & Giờ mở cửa -->
+          <div class="form-section">
+            <h4 class="form-section-title">⏰ Giờ hoạt động & Tiện ích</h4>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-open-time">Giờ mở cửa</label>
+                <input id="f-open-time" type="text" name="openTime" placeholder="VD: 07:00" />
+              </div>
+              <div class="field">
+                <label for="f-close-time">Giờ đóng cửa</label>
+                <input id="f-close-time" type="text" name="closeTime" placeholder="VD: 22:00" />
+              </div>
+              <div class="field">
+                <label for="f-open-days">Ngày hoạt động</label>
+                <input id="f-open-days" type="text" name="openDays" placeholder="VD: Thứ 2 – Chủ Nhật" />
+              </div>
+            </div>
+            <div class="field">
+              <label>Tiện ích có sẵn</label>
+              <div class="amenities-grid">
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="wifi" /> WiFi miễn phí</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="parking" /> Bãi đỗ xe</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="pool" /> Bể bơi</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="restaurant" /> Nhà hàng</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="spa" /> Spa/Massage</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="gym" /> Phòng gym</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="bar" /> Bar/Café</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="airport_shuttle" /> Đưa đón sân bay</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="air_con" /> Điều hoà</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="kids" /> Thân thiện trẻ em</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="pet" /> Chấp nhận thú cưng</label>
+                <label class="amenity-check"><input type="checkbox" name="amenities" value="accessible" /> Tiếp cận người khuyết tật</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liên hệ -->
+          <div class="form-section">
+            <h4 class="form-section-title">📞 Thông tin liên hệ</h4>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-phone">Số điện thoại</label>
+                <input id="f-phone" type="tel" name="contactPhone" placeholder="VD: 0912 345 678" />
+              </div>
+              <div class="field">
+                <label for="f-email">Email liên hệ</label>
+                <input id="f-email" type="email" name="contactEmail" placeholder="info@khachsan.com" />
+              </div>
+              <div class="field">
+                <label for="f-website">Website</label>
+                <input id="f-website" type="url" name="website" placeholder="https://..." />
+              </div>
+            </div>
+          </div>
+
+          <div class="biz-modal-footer">
+            <div id="place-form-status" class="form-status"></div>
+            <div class="footer-actions">
+              <button type="button" class="btn btn--outline btn--danger" id="btn-delete-place" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Xóa dịch vụ
+              </button>
+              <button type="button" class="btn btn--ghost" data-close-modal>Hủy</button>
+              <button type="submit" class="btn btn--primary" id="btn-save-place">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Lưu dịch vụ
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOGIN OVERLAY (For Standalone Portal) ===== -->
+  <div id="biz-login-overlay" class="biz-login-overlay" style="display: none;">
+    <div class="biz-login-card">
+      <div class="biz-login-header">
+        <span class="logo-mark">◈</span>
+        <h2>Kênh Đối Tác WanderViệt</h2>
+        <p>Đăng nhập để quản lý dịch vụ và điểm đến của bạn</p>
+      </div>
+      <form id="biz-login-form">
+        <div class="field">
+          <label>Email doanh nghiệp</label>
+          <input type="email" id="biz-login-email" required placeholder="email@congty.com" />
+        </div>
+        <div class="field">
+          <label>Mật khẩu</label>
+          <input type="password" id="biz-login-password" required placeholder="••••••••" />
+        </div>
+        <div id="biz-login-msg" class="msg-error" style="margin-bottom: 1rem; font-size: 0.85rem; color: #ef4444;"></div>
+        <button type="submit" class="btn btn--primary" style="width: 100%; height: 3rem; font-weight: 600;">
+          Đăng nhập vào Dashboard
+        </button>
+      </form>
+      <div class="biz-login-footer">
+        Chưa có tài khoản đối tác? <a href="register.html">Đăng ký tại đây</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var token = localStorage.getItem('wander_business_token');
+      var overlay = document.getElementById('biz-login-overlay');
+      var loginForm = document.getElementById('biz-login-form');
+      
+      function showLogin() {
+        if (overlay) {
+          overlay.style.display = 'flex';
+          document.body.classList.add('is-logging-in');
+        }
+      }
+
+      // Xử lý nộp form đăng nhập
+      if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          var email = document.getElementById('biz-login-email').value;
+          var password = document.getElementById('biz-login-password').value;
+          var msg = document.getElementById('biz-login-msg');
+          var btn = loginForm.querySelector('button[type="submit"]');
+          
+          if (window.WanderUI) WanderUI.setButtonLoading(btn, true);
+          msg.textContent = '';
+
+          fetch('/api/auth/business/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, password: password })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(json) {
+            if (!json.success) {
+              msg.textContent = json.message || 'Đăng nhập thất bại.';
+            } else {
+              localStorage.setItem('wander_business_token', json.token);
+              if (window.WanderUI) WanderUI.showToast('Đăng nhập thành công!', 'success');
+              setTimeout(function() { window.location.reload(); }, 600);
+            }
+          })
+          .catch(function() {
+            msg.textContent = 'Lỗi kết nối máy chủ.';
+          })
+          .finally(function() {
+            if (window.WanderUI) WanderUI.setButtonLoading(btn, false);
+          });
+        });
+      }
+
+      if (!token) {
+        showLogin();
+      } else {
+        try {
+          var payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+          var role = (payload.user.role || "").toLowerCase();
+          if (role !== 'business') {
+            showLogin();
+            document.getElementById('biz-login-msg').textContent = '🔒 Cổng này chỉ dành cho Đối tác. Vui lòng đăng nhập đúng tài khoản.';
+          }
+        } catch (e) {
+          localStorage.removeItem('wander_business_token');
+          showLogin();
+        }
+      }
+    })();
+  </script>
+
+  <script src="business.js?v=1776819067178"></script>
+  <script src="biz-extend.js?v=1776819067178"></script>
+</body>
+</html>

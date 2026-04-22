@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WanderViệt — Quản Trị Hệ Thống</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700&family=Outfit:wght@500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css?v=1776819067174" crossorigin="" />
+  <link rel="stylesheet" href="global-tokens.css?v=1776819067174" />
+  <link rel="stylesheet" href="admin.css?v=1776819067174" />
+  <script src="SharedUI.js?v=1776819067174"></script>
+</head>
+
+<body class="admin-body">
+  <header class="site-header admin-header">
+    <div class="container header-inner">
+      <div class="header-left">
+        <a href="/index.html" class="logo">
+          <span class="logo-mark">◈</span>
+          WanderViệt <span class="badge-admin">ADMIN</span>
+        </a>
+      </div>
+      
+      <div class="header-right">
+        <!-- Notification Bell -->
+        <button type="button" class="notif-btn" onclick="WanderUI.toggleNotificationDrawer()" aria-label="Thông báo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="wander-notif-badge" data-notif-badge></span>
+        </button>
+        
+        <div class="admin-profile" id="admin-profile-head">
+          <img src="" alt="Admin" class="admin-profile-img" id="admin-avatar-head" />
+          <div class="admin-profile-info">
+            <span class="admin-profile-name" id="admin-name-head">Admin</span>
+            <span class="admin-profile-role">Super Admin</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== ADMIN LOGIN OVERLAY ===== -->
+  <div id="admin-login-overlay" style="
+    position:fixed; inset:0; z-index:2000;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f172a 100%);
+    display:none; align-items:center; justify-content:center;
+    font-family: var(--font-body, 'Be Vietnam Pro', sans-serif);
+  ">
+    <!-- Decorative orbs -->
+    <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.15),transparent 70%);top:-150px;left:-100px;pointer-events:none;"></div>
+    <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,0.12),transparent 70%);bottom:-100px;right:-50px;pointer-events:none;"></div>
+
+    <div style="
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      border-radius: 24px;
+      padding: 2.5rem 2.75rem;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    ">
+      <!-- Logo -->
+      <div style="text-align:center; margin-bottom:1.75rem;">
+        <div style="font-size:2.5rem; margin-bottom:0.5rem;">🛡️</div>
+        <h1 style="margin:0; font-size:1.5rem; font-family:var(--font-head,'Outfit',sans-serif); font-weight:700; background:linear-gradient(135deg,#38bdf8,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;">WanderViệt Admin</h1>
+        <p style="margin:0.4rem 0 0; font-size:0.85rem; color:rgba(148,163,184,0.8);">Truy cập chỉ dành cho Quản trị viên</p>
+      </div>
+
+      <!-- Login Form -->
+      <form id="admin-login-form" style="display:flex; flex-direction:column; gap:1rem;">
+        <div>
+          <label style="display:block; font-size:0.8rem; font-weight:600; color:rgba(148,163,184,0.9); margin-bottom:0.4rem; letter-spacing:0.05em; text-transform:uppercase;">Email</label>
+          <input id="admin-login-email" type="email" required autocomplete="email"
+            placeholder="admin@wanderviet.com"
+            style="width:100%; padding:0.75rem 1rem; border-radius:10px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:#f8fafc; font-size:0.95rem; font-family:inherit; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;"
+            onfocus="this.style.borderColor='#38bdf8'; this.style.boxShadow='0 0 0 3px rgba(56,189,248,0.15)'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='none'"
+          />
+        </div>
+        <div>
+          <label style="display:block; font-size:0.8rem; font-weight:600; color:rgba(148,163,184,0.9); margin-bottom:0.4rem; letter-spacing:0.05em; text-transform:uppercase;">Mật khẩu</label>
+          <input id="admin-login-password" type="password" required autocomplete="current-password"
+            placeholder="••••••••"
+            style="width:100%; padding:0.75rem 1rem; border-radius:10px; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12); color:#f8fafc; font-size:0.95rem; font-family:inherit; box-sizing:border-box; outline:none; transition:border-color 0.2s, box-shadow 0.2s;"
+            onfocus="this.style.borderColor='#38bdf8'; this.style.boxShadow='0 0 0 3px rgba(56,189,248,0.15)'"
+            onblur="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.boxShadow='none'"
+          />
+        </div>
+        <button type="submit" id="admin-login-btn"
+          style="margin-top:0.5rem; padding:0.85rem; border-radius:12px; border:none; background:linear-gradient(135deg,#38bdf8,#6366f1); color:#fff; font-size:1rem; font-weight:700; font-family:inherit; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; box-shadow:0 4px 16px rgba(56,189,248,0.35);"
+          onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(56,189,248,0.45)'"
+          onmouseout="this.style.transform=''; this.style.boxShadow='0 4px 16px rgba(56,189,248,0.35)'"
+        >Đăng nhập Quản trị</button>
+        <p id="admin-login-msg" style="margin:0; text-align:center; font-size:0.875rem; min-height:1.25rem; color:#f87171;"></p>
+      </form>
+
+      <p style="margin:1.25rem 0 0; text-align:center; font-size:0.78rem; color:rgba(148,163,184,0.5);">
+        Chỉ tài khoản có quyền Admin mới được truy cập.
+      </p>
+    </div>
+  </div>
+
+  <main id="main" class="admin-main">
+    <div class="admin-layout">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar" id="admin-sidebar">
+        <div class="admin-sidebar__header">
+          <h2 class="admin-sidebar__title">◈ WanderViệt Admin</h2>
+          <p class="admin-sidebar__desc">Cổng quản trị tối cao</p>
+        </div>
+        <nav class="sidebar-nav" role="tablist">
+          <button type="button" class="sidebar-btn is-active" data-admin-tab="overview">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Tổng quan
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="moderation">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            Duyệt nội dung 
+            <span class="badge-count" id="badge-pending-count" hidden>0</span>
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="users">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            Người dùng
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="broadcast">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10l-3.1 3.1a2 2 0 0 1-1.4.6H10.3z"/><path d="M15 8h.01"/><path d="M10 8h.01"/><path d="M7 8h.01"/><path d="M7 12h10"/><path d="M7 16h6"/></svg>
+            Gửi thông báo
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="logs">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Nhật ký hệ thống
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="places">
+             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+             Kho địa điểm
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="admins">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6"/><path d="M23 11h-6"/></svg>
+            Quản lý Admin
+          </button>
+          <button type="button" class="sidebar-btn" data-admin-tab="knowledge">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Dữ liệu AI
+          </button>
+          
+          <div class="sidebar-divider"></div>
+          
+          <button type="button" class="sidebar-btn logout-btn" data-admin-logout>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Đăng xuất
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" class="sidebar-user-avatar" alt="Admin" />
+          <div class="sidebar-user-info">
+            <strong id="sidebar-admin-name">Super Admin</strong>
+            <span id="sidebar-admin-email">admin@wanderviet.com</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <div class="admin-main-content">
+        <div id="admin-error" class="admin-error-box" hidden>
+          <strong>⛔ Truy cập bị từ chối.</strong> Bạn cần đăng nhập bằng tài khoản Admin để xem trang này.<br />
+          <a href="/index.html" style="color:inherit;text-decoration:underline">← Quay lại & đăng nhập</a>
+        </div>
+
+        <div id="admin-content" class="is-hidden">
+
+          <!-- ===== OVERVIEW PANEL — shell + charts merged ===== -->
+          <div id="panel-overview" class="admin-panel">
+
+            <!-- Overview header shell (inside panel, hides with it) -->
+            <div id="overview-shell">
+              <div class="panel-header-top">
+                <div style="flex:1">
+                  <h1 class="main-title">Tổng quan hệ thống</h1>
+                  <p class="main-subtitle">Chào mừng trở lại, đây là những gì đang diễn ra hôm nay.</p>
+                </div>
+                <div class="theme-presets-wrap" style="display:flex;gap:0.5rem;align-items:center;">
+                  <span style="font-size:0.75rem;color:var(--admin-text-muted);font-weight:600;text-transform:uppercase;">Tông màu:</span>
+                  <button class="bg-preset-btn is-active" data-preset="default" title="Default Blue" style="width:22px;height:22px;border-radius:50%;background:var(--admin-primary);border:2px solid rgba(255,255,255,0.4);cursor:pointer;"></button>
+                  <button class="bg-preset-btn" data-preset="midnight" title="Midnight Deep" style="width:22px;height:22px;border-radius:50%;background:#1e1b4b;border:2px solid rgba(255,255,255,0.2);cursor:pointer;"></button>
+                  <button class="bg-preset-btn" data-preset="forest" title="Natural Forest" style="width:22px;height:22px;border-radius:50%;background:#064e3b;border:2px solid rgba(255,255,255,0.2);cursor:pointer;"></button>
+                  <button class="bg-preset-btn" data-preset="slate" title="Business Slate" style="width:22px;height:22px;border-radius:50%;background:#1e293b;border:2px solid rgba(255,255,255,0.2);cursor:pointer;"></button>
+                  <button class="bg-preset-btn" data-preset="purple" title="Luxury Purple" style="width:22px;height:22px;border-radius:50%;background:#2e1065;border:2px solid rgba(255,255,255,0.2);cursor:pointer;"></button>
+                </div>
+              </div>
+              <div class="stat-grid" id="admin-stats">
+                <div class="stat-card stat-card--blue"><div class="stat-icon-wrap">👥</div><div class="stat-data"><div class="stat-label">Tổng Người Dùng</div><div class="stat-val" id="stat-total-users">—</div></div></div>
+                <div class="stat-card stat-card--green"><div class="stat-icon-wrap">🏨</div><div class="stat-data"><div class="stat-label">Doanh Nghiệp</div><div class="stat-val" id="stat-total-biz">—</div></div></div>
+                <div class="stat-card stat-card--purple"><div class="stat-icon-wrap">⚡</div><div class="stat-data"><div class="stat-label">Tương Tác</div><div class="stat-val" id="stat-daily-interactions">—</div></div></div>
+                <div class="stat-card stat-card--yellow"><div class="stat-icon-wrap">✨</div><div class="stat-data"><div class="stat-label">Lịch trình AI</div><div class="stat-val" id="stat-total-iti">—</div></div></div>
+              </div>
+            </div><!-- /overview-shell -->
+            <div class="overview-grid">
+            <div class="overview-grid">
+              <div class="overview-left">
+                <div class="glass-panel chart-box">
+                  <div class="chart-box__header">
+                    <h3>📊 Cơ cấu Phân Hạng</h3>
+                    <button class="btn btn--ghost btn--small">Chi tiết</button>
+                  </div>
+                  <div class="rank-hierarchy-list">
+                    <div class="rank-item">
+                      <div class="rank-label">💎 Kim Cương</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width: 15%; background: var(--admin-accent)"></div></div>
+                      <div class="rank-val">15%</div>
+                    </div>
+                    <div class="rank-item">
+                      <div class="rank-label">🥇 Vàng</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width: 35%; background: var(--admin-green)"></div></div>
+                      <div class="rank-val">35%</div>
+                    </div>
+                    <div class="rank-item">
+                      <div class="rank-label">🥈 Bạc</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width: 30%; background: var(--admin-purple)"></div></div>
+                      <div class="rank-val">30%</div>
+                    </div>
+                    <div class="rank-item">
+                      <div class="rank-label">👤 Thành viên</div>
+                      <div class="rank-bar-wrap"><div class="rank-bar" style="width: 20%; background: var(--admin-warm)"></div></div>
+                      <div class="rank-val">20%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="overview-right">
+                <div class="glass-panel log-box">
+                  <div class="chart-box__header">
+                    <h3>⏱️ Lịch sử hoạt động (Real-time)</h3>
+                  </div>
+                  <div class="realtime-logs" id="admin-mini-logs">
+                    <div style="text-align:center;padding:2rem;color:var(--admin-text-muted);font-size:0.85rem;">Đang tải nhật ký...</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div><!-- /overview-grid -->
+          </div><!-- /panel-overview -->
+          
+          <!-- Moderation Panel -->
+          <section id="panel-moderation" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title">Hàng đợi Kiểm duyệt</h2>
+              <p class="section-desc">Các địa điểm/dịch vụ do doanh nghiệp mới đăng đang chờ phê duyệt.</p>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ảnh</th>
+                    <th>Tên dịch vụ</th>
+                    <th>Doanh nghiệp</th>
+                    <th>Ngày đăng</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="moderation-tbody">
+                  <tr><td colspan="5" class="table-loading">Đang tải hàng đợi...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Broadcast Panel -->
+          <section id="panel-broadcast" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title">Terminal Thông báo Hệ thống</h2>
+              <p class="section-desc">Gửi lệnh phát dữ liệu rảnh tay tới toàn mạng lưới WanderViệt.</p>
+            </div>
+            
+            <div class="command-center">
+              <div class="command-header">
+                <div class="cmd-dot cmd-dot--red"></div>
+                <div class="cmd-dot cmd-dot--yellow"></div>
+                <div class="cmd-dot cmd-dot--green"></div>
+                <span style="font-family: monospace; font-size: 0.75rem; color: #64748b; margin-left: 0.5rem;">wanderviet-cmd v1.0.4</span>
+              </div>
+              <div class="command-body">
+                <form id="broadcast-form">
+                  <div class="command-line">
+                    <span class="command-prompt">root@wander:~$</span>
+                    <span>select --recipient</span>
+                    <div class="command-input-wrap">
+                      <select name="recipientType" class="command-input" style="appearance: none;">
+                        <option value="ALL">ALL_USERS</option>
+                        <option value="BUSINESS">BUSINESS_PARTNERS</option>
+                        <option value="USER">TRAVELERS</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="command-line">
+                    <span class="command-prompt">root@wander:~$</span>
+                    <span>set --type</span>
+                    <div class="command-input-wrap">
+                      <select name="type" class="command-input" style="appearance: none;">
+                        <option value="broadcast">GENERIC_BROADCAST</option>
+                        <option value="info">INFO_ALERT</option>
+                        <option value="success">EVENT_REWARD</option>
+                        <option value="warning">SECURITY_MAINTENANCE</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="command-line">
+                    <span class="command-prompt">root@wander:~$</span>
+                    <span>echo --title</span>
+                    <div class="command-input-wrap">
+                      <input type="text" name="title" class="command-input" required placeholder='Enter title in "quotes"...' />
+                    </div>
+                  </div>
+                  <div class="command-line" style="align-items: flex-start;">
+                    <span class="command-prompt">root@wander:~$</span>
+                    <span>write --message</span>
+                    <div class="command-input-wrap">
+                      <textarea name="message" class="command-input" rows="3" required placeholder="Type your message system-wide..."></textarea>
+                    </div>
+                  </div>
+                  <div class="command-line">
+                    <span class="command-prompt">root@wander:~$</span>
+                    <span>attach --url</span>
+                    <div class="command-input-wrap">
+                      <input type="text" name="link" class="command-input" placeholder="Optional URL destination..." />
+                    </div>
+                  </div>
+                  
+                  <button type="submit" class="command-btn" id="btn-send-broadcast">
+                    <span>EXECUTE_COMMAND --push</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polyline points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <!-- Users Panel -->
+          <section id="panel-users" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header">
+              <div style="flex:1">
+                <h2 class="section-title" style="font-size:1.4rem;margin:0">Danh sách Người dùng / Đối tác</h2>
+                <div class="bulk-actions" style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                   <button class="btn btn--small btn--ghost" onclick="WanderUI.showToast('Vui lòng chọn ít nhất 1 mục', 'warning')">📥 Xuất Excel</button>
+                   <button class="btn btn--small btn--ghost" onclick="WanderUI.showToast('Chức năng Khóa hàng loạt yêu cầu xác thực cấp 2', 'error')">🔒 Khóa hàng loạt</button>
+                </div>
+              </div>
+              <input type="text" id="user-search" class="admin-search-input"
+                placeholder="🔍 Tìm theo email hoặc tên..." />
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Tên / Email</th>
+                    <th>Cấp bậc</th>
+                    <th>Vai trò</th>
+                    <th>Ngày tham gia</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:2rem">Đang tải...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          
+          <!-- Places Panel -->
+          <section id="panel-places" class="admin-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title" style="font-size:1.4rem;margin:0">Điểm Du Lịch</h2>
+              <div style="display:flex;gap:0.75rem;align-items:center">
+                <input type="text" id="place-search" class="admin-search-input" placeholder="🔍 Tìm điểm đến..." />
+                <button class="btn btn--primary btn--small" id="btn-add-place">+ Thêm mới</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ảnh</th>
+                    <th>Tên điểm đến</th>
+                    <th>Vùng miền</th>
+                    <th>Ngân sách</th>
+                    <th>Tọa độ</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="places-tbody">
+                  <tr>
+                    <td colspan="6" style="text-align:center;padding:2rem">Đang tải...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="panel-admins" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header" style="margin-bottom:0.75rem;">
+              <h2 class="section-title" style="font-size:1.2rem;margin:0;">Tạo tài khoản Admin cấp thấp</h2>
+              <span style="font-size:0.82rem;color:var(--admin-text-muted);">Chỉ Super Admin mới sử dụng được</span>
+            </div>
+            <form id="admin-create-form" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.75rem;align-items:end;">
+              <label class="field" style="margin:0;">
+                <span class="field-label">Tên hiển thị</span>
+                <input type="text" name="name" required placeholder="Ví dụ: Admin Moderation" />
+              </label>
+              <label class="field" style="margin:0;">
+                <span class="field-label">Email admin</span>
+                <input type="email" name="email" required placeholder="new-admin@wanderviet.com" />
+              </label>
+              <label class="field" style="margin:0;">
+                <span class="field-label">Mật khẩu</span>
+                <input type="password" name="password" required minlength="8" placeholder="Tối thiểu 8 ký tự" />
+              </label>
+              <button type="submit" class="btn btn--primary" id="btn-create-admin">Tạo Admin</button>
+            </form>
+            <p id="admin-create-status" style="margin-top:0.6rem;min-height:1.2rem;font-size:0.9rem;color:var(--admin-text-muted);"></p>
+          </section>
+
+          <!-- Feedbacks Panel -->
+          <section id="panel-feedbacks" class="admin-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title" style="font-size:1.4rem;margin:0">Danh sách Phản hồi</h2>
+              <input type="text" id="feedback-search" class="admin-search-input"
+                placeholder="🔍 Tìm theo nội dung, tên..." />
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Người gửi</th>
+                    <th>Email</th>
+                    <th style="width: 45%;">Nội dung</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="feedbacks-tbody">
+                  <tr>
+                    <td colspan="5" style="text-align:center;padding:2rem">Đang tải...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Itineraries Panel -->
+          <section id="panel-itineraries" class="admin-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title" style="font-size:1.4rem;margin:0">Lịch trình AI đã tạo</h2>
+              <input type="text" id="itinerary-search" class="admin-search-input"
+                placeholder="🔍 Tìm theo điểm đến, ngân sách..." />
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ngày tạo</th>
+                    <th>Điểm đến</th>
+                    <th>Số ngày</th>
+                    <th>Ngân sách</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="itineraries-tbody">
+                  <tr>
+                    <td colspan="5" style="text-align:center;padding:2rem">Đang tải...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Knowledge Panel -->
+          <section id="panel-knowledge" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header">
+              <div style="flex:1">
+                <h2 class="section-title">Quản lý Tri thức AI (Smart Cache)</h2>
+                <p class="section-desc">Cung cấp các câu trả lời mẫu để Chatbot phản hồi tức thì mà không cần gọi Groq AI.</p>
+              </div>
+              <div style="display:flex; gap:0.75rem;">
+                <button class="btn btn--success btn--small" id="btn-seed-knowledge">♻️ Nạp dữ liệu mẫu</button>
+                <button class="btn btn--primary btn--small" id="btn-add-knowledge">+ Thêm câu hỏi</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Câu hỏi / Từ khóa</th>
+                    <th>Câu trả lời</th>
+                    <th>Tags</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="knowledge-tbody">
+                  <tr><td colspan="4" style="text-align:center">Đang tải dữ liệu tri thức...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <!-- Lịch sử hoạt động Panel -->
+          <section id="panel-logs" class="admin-panel glass-panel" hidden>
+            <div class="admin-panel-header">
+              <h2 class="section-title" style="font-size:1.4rem;margin:0">Lịch sử hệ thống</h2>
+              <div class="filter-bar">
+                <button class="btn btn--small btn--ghost" data-log-filter="all">Tất cả</button>
+                <button class="btn btn--small btn--ghost" data-log-filter="user">Người dùng</button>
+                <button class="btn btn--small btn--ghost" data-log-filter="business">Doanh nghiệp</button>
+                <button class="btn btn--small btn--ghost" data-log-filter="admin">Admin</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Tài khoản</th>
+                    <th>Hành động</th>
+                    <th>IP / Thiết bị</th>
+                  </tr>
+                </thead>
+                <tbody id="logs-tbody">
+                  <tr>
+                    <td colspan="4" style="text-align:center;padding:2rem">Đang tải lịch sử...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+        </div> <!-- End admin-content -->
+      </div> <!-- End admin-main-content -->
+    </div> <!-- End admin-layout -->
+  </main>
+
+  <button id="theme-toggle" class="theme-toggle-btn">🌓</button>
+
+  <!-- Backdrop for Drawers -->
+  <div class="modal-backdrop" id="admin-modal-backdrop" hidden></div>
+
+  <!-- User Edit Drawer (Off-canvas) -->
+  <div class="slide-drawer" id="modal-user-form" hidden>
+    <div class="slide-drawer__inner">
+      <div class="slide-drawer__header">
+        <h2 class="slide-drawer__title" id="user-modal-title">Chỉnh sửa Người dùng</h2>
+        <button type="button" class="slide-drawer__close" data-close-modal aria-label="Đóng">×</button>
+      </div>
+      <div class="slide-drawer__body">
+        <form id="user-form">
+          <input type="hidden" name="id" id="user-edit-id" />
+          <div class="admin-form-grid">
+            <label class="field"><span class="field-label">Họ tên</span><input type="text" name="name" /></label>
+            <label class="field"><span class="field-label">Tên hiển thị</span><input type="text"
+                name="displayName" /></label>
+            <label class="field"><span class="field-label">Email</span><input type="email" name="email" /></label>
+            <label class="field"><span class="field-label">Số điện thoại</span><input type="tel" name="phone" /></label>
+            <label class="field field--full"><span class="field-label">Link Ảnh đại diện (URL)</span><input type="url"
+                name="avatar" placeholder="https://..." /></label>
+            <label class="field field--full"><span class="field-label">Ghi chú</span><textarea name="notes"
+                rows="2"></textarea></label>
+            <label class="field field--full" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0">
+              <input type="checkbox" name="isAdmin" id="chk-is-admin" style="width:20px;height:20px" />
+              <span class="field-label" style="margin:0">Cấp quyền Admin</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:1rem">
+            <button type="submit" class="btn btn--primary" style="flex:1">💾 Lưu thay đổi</button>
+            <button type="button" class="btn btn--ghost" id="btn-delete-user"
+              style="color:#f87171;border-color:rgba(248,113,113,0.4)">🗑️ Xóa tài khoản</button>
+          </div>
+          <p id="user-form-status" style="margin-top:0.75rem;font-size:0.9rem;min-height:1.25rem"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Place Edit Drawer (Off-canvas) -->
+  <div class="slide-drawer" id="modal-place-form" hidden>
+    <div class="slide-drawer__inner slide-drawer__inner--wide">
+      <div class="slide-drawer__header">
+        <h2 class="slide-drawer__title" id="place-modal-title">Thêm / Sửa Điểm Đến</h2>
+        <button type="button" class="slide-drawer__close" data-close-modal aria-label="Đóng">×</button>
+      </div>
+      <div class="slide-drawer__body">
+        <form id="place-form">
+          <input type="hidden" name="id" id="place-edit-id" />
+          <div class="admin-form-grid">
+            <label class="field"><span class="field-label">Tên địa điểm (*)</span><input type="text" name="name"
+                required /></label>
+            <label class="field"><span class="field-label">Vùng miền</span><input type="text" name="region" /></label>
+            <div class="field field--full">
+              <span class="field-label">Hình ảnh điểm đến (*)</span>
+              <!-- Hidden input to hold absolute array of URL images if we modify order -->
+              <input type="hidden" name="images" id="hidden-place-images" />
+              <div class="upload-dropzone" id="place-dropzone">
+                <input type="file" id="place-image-input" name="imageFile" accept="image/jpeg, image/png, image/webp" multiple class="visually-hidden" />
+                <label for="place-image-input" class="upload-dropzone__label">
+                  <span style="font-size: 2rem; display:block; margin-bottom:0.5rem;">📸</span>
+                  <p style="margin:0 0 0.25rem 0;">Kéo thả ảnh vào đây hoặc <strong>nhấp để chọn</strong></p>
+                  <p style="margin:0; font-size: 0.8rem; color: var(--text-muted);">(Tối đa 5MB/ảnh, hỗ trợ JPG, PNG, WEBP)</p>
+                </label>
+                <div class="upload-preview-list" id="place-dropzone-preview" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:1rem;"></div>
+              </div>
+            </div>
+            <label class="field"><span class="field-label">Ngân sách</span>
+              <select name="budget">
+                <option value="1">1 - Tiết kiệm</option>
+                <option value="2" selected>2 - Vừa phải</option>
+                <option value="3">3 - Cao cấp</option>
+              </select>
+            </label>
+            <label class="field"><span class="field-label">Nhịp chuyến</span>
+              <select name="pace">
+                <option value="cham">Thong thả</option>
+                <option value="vua" selected>Cân bằng</option>
+                <option value="nhanh">Năng động</option>
+              </select>
+            </label>
+            <label class="field"><span class="field-label">Vĩ độ (lat)</span><input type="number" name="lat" step="any"
+                placeholder="ví dụ: 10.2899" /></label>
+            <label class="field"><span class="field-label">Kinh độ (lng)</span><input type="number" name="lng"
+                step="any" placeholder="ví dụ: 103.984" /></label>
+            <label class="field field--full"><span class="field-label">Tags (cách nhau bằng dấu phẩy)</span><input
+                type="text" name="tags" placeholder="ví dụ: biển, ẩm thực" /></label>
+            <label class="field field--full"><span class="field-label">Mô tả ngắn (1-2 câu)</span><textarea name="meta"
+                rows="2"></textarea></label>
+            <label class="field field--full"><span class="field-label">Nội dung chi tiết</span><textarea name="text"
+                rows="4"></textarea></label>
+            <label class="field field--full"><span class="field-label">Gợi ý di chuyển</span><textarea name="transportTips"
+                rows="2"></textarea></label>
+            
+            <fieldset class="field field--full" style="border:1px solid var(--border); padding:1rem; border-radius:var(--radius-sm); margin-top:0.5rem;">
+              <legend class="field-label" style="padding:0 0.5rem;">Chứng thực dữ liệu</legend>
+              <div style="display:flex; gap:1rem; flex-direction:column;">
+                <label style="display:flex; align-items:center; gap:0.5rem;">
+                  <input type="checkbox" name="verified" id="chk-verified" style="width:20px;height:20px;accent-color:var(--success)" />
+                  <strong>Dữ liệu này đã được kiểm chứng & theo nguồn thực tế</strong>
+                </label>
+                <div style="display:flex; gap:1rem; width:100%;">
+                  <label class="field" style="flex:1"><span class="field-label">Tên Nguồn/Tổ chức</span><input type="text" name="sourceName" placeholder="Ví dụ: VQG Côn Đảo" /></label>
+                  <label class="field" style="flex:1"><span class="field-label">Link Tham chiếu</span><input type="url" name="sourceUrl" placeholder="https://..." /></label>
+                </div>
+              </div>
+            </fieldset>
+
+            <label class="field field--full" style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0">
+              <input type="checkbox" name="top" id="chk-top" style="width:20px;height:20px" />
+              <span class="field-label" style="margin:0">Đánh dấu là điểm "Top"</span>
+            </label>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:1rem">
+            <button type="submit" class="btn btn--primary" style="flex:1">💾 Lưu Thông Tin</button>
+            <button type="button" class="btn btn--ghost" id="btn-delete-place" hidden
+              style="color:#f87171;border-color:rgba(248,113,113,0.4)">🗑️ Xóa điểm đến</button>
+          </div>
+          <p id="place-form-status" style="margin-top:0.75rem;font-size:0.9rem;min-height:1.25rem"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=1776819067174" crossorigin=""></script>
+  <script src="admin.js?v=1776819067174"></script>
+</body>
+
+</html>
