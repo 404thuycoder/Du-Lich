@@ -33,8 +33,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                 if (parts.length >= 2) {
                     var base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
                     var padding = '='.repeat((4 - base64.length % 4) % 4);
-                    var payload = JSON.parse(atob(base64 + padding));
-                    userRole = (((payload.user || payload.account) || {}).role || 'user').toLowerCase();
+                    var payload = JSON.parse(decodeURIComponent(escape(atob(base64 + padding))));
+                    var u = payload.user || payload.account || payload;
+                    userRole = (u.role || 'user').toLowerCase();
                 }
               } catch (e) {
                   console.warn("Token decoding failed, defaulting to user role");
@@ -42,6 +43,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
             }
             _context2.p = 2;
             _context2.n = 3;
+            // Đảm bảo lấy ngôn ngữ mới nhất từ localStorage nếu ctx không có
+            var selectedLang = (ctx === null || ctx === void 0 ? void 0 : ctx.lang) || localStorage.getItem('wander_chat_lang') || 'auto';
+            
             return fetch('/api/chat', {
               method: 'POST',
               headers: {
@@ -53,7 +57,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
                 coords: (ctx === null || ctx === void 0 ? void 0 : ctx.userPos) || null,
                 itinerary: (ctx === null || ctx === void 0 ? void 0 : ctx.itinerary) || [],
                 deviceId: deviceId,
-                role: userRole
+                role: userRole,
+                sessionId: (ctx === null || ctx === void 0 ? void 0 : ctx.sessionId) || null,
+                lang: selectedLang
               })
             });
           case 3:
@@ -66,9 +72,9 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
               _context2.n = 5;
               break;
             }
-            return _context2.a(2, data.answer);
+            return _context2.a(2, data);
           case 5:
-            return _context2.a(2, "Trợ lý đang bận, thử lại sau nhé.");
+            return _context2.a(2, { success: false, answer: "Trợ lý đang bận, thử lại sau nhé." });
           case 6:
             _context2.p = 6;
             _t = _context2.v;
@@ -87,7 +93,8 @@ function _asyncToGenerator(n) { return function () { var t = this, e = arguments
           while (1) switch (_context.n) {
             case 0:
               _context.n = 1;
-              return wanderChatReply(text, {});
+              var currentLang = localStorage.getItem('wander_chat_lang') || 'auto';
+              return wanderChatReply(text, { lang: currentLang });
             case 1:
               answer = _context.v;
               // Hiển thị answer lên UI (giả định có hàm display định nghĩa ở main.js hoặc nơi khác)

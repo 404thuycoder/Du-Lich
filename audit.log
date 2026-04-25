@@ -57,3 +57,74 @@
 {"timestamp":"2026-04-22T01:27:33.800Z","user":"USER_LOGIN","role":"Đăng nhập: thuy@123","action":{"user":{"id":"69e7d044f8d91bba90f8c41b","email":"thuy@123","displayName":"Thùy","role":"user"}},"details":{}}
 {"timestamp":"2026-04-22T01:28:06.542Z","user":"USER_REGISTER","role":"Người dùng mới đăng ký: 24001647@eaut","action":{"user":{"id":"69e824260f54402cea6ad35f","email":"24001647@eaut","displayName":"Phùng Vĩnh Thùy","role":"user"}},"details":{}}
 {"timestamp":"2026-04-22T08:16:16.210Z","user":"USER_REGISTER","role":"Người dùng mới đăng ký: 24001647@vn","action":{"user":{"id":"69e883d0e198bb6a9e017c96","email":"24001647@vn","displayName":"Thùy","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T21:45:55.237Z","user":"USER_LOGIN","role":"Đăng nhập: thuy1@gmail.com","action":{"user":{"id":"69ea5e3825457c7f377614e6","email":"thuy1@gmail.com","displayName":"Thùy #1","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:30:59.381Z","user":"USER_LOGIN","role":"Đăng nhập: thuy1@gmail.com","action":{"user":{"id":"69ea5e3825457c7f377614e6","email":"thuy1@gmail.com","displayName":"Thùy #1","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:31:43.662Z","user":"USER_REGISTER","role":"Người dùng mới đăng ký: thuy3@gmail.com","action":{"user":{"id":"69ea9dcf3f14a8e70a199eaf","email":"thuy3@gmail.com","displayName":"Thùy #3","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:36:29.945Z","user":"USER_LOGIN","role":"Đăng nhập: thuy2@gmail.com","action":{"user":{"id":"69ea5f1425457c7f377614ea","email":"thuy2@gmail.com","displayName":"Thùy #2","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:36:47.960Z","user":"USER_LOGIN","role":"Đăng nhập: thuy2@gmail.com","action":{"user":{"id":"69ea5f1425457c7f377614ea","email":"thuy2@gmail.com","displayName":"Thùy #2","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:37:10.174Z","user":"USER_LOGIN","role":"Đăng nhập: thuy2@gmail.com","action":{"user":{"id":"69ea5f1425457c7f377614ea","email":"thuy2@gmail.com","displayName":"Thùy #2","role":"user"}},"details":{}}
+{"timestamp":"2026-04-23T22:42:24.982Z","user":"USER_LOGIN","role":"Đăng nhập: thuy1@gmail.com","action":{"user":{"id":"69ea5e3825457c7f377614e6","email":"thuy1@gmail.com","displayName":"Thùy #1","role":"user"}},"details":{}}
+{"timestamp":"2026-04-24T01:10:37.391Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:10:56.775Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:27:26.491Z","user":"thuy1@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy1@gmail.com","details":{}}
+{"timestamp":"2026-04-24T01:27:45.357Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:35:21.462Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:35:30.429Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:35:38.313Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:38:27.329Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:03.354Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:06.766Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:07.441Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:07.579Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:07.813Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:07.957Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:08.094Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:41:08.250Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:43:24.989Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:43:38.396Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:43:39.630Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:43:40.567Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:45:33.756Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:45:36.861Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:45:37.857Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:45:41.733Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:52:37.051Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T01:52:46.382Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_manual","details":{}}
+{"timestamp":"2026-04-24T02:04:39.243Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_save","details":{}}
+{"timestamp":"2026-04-24T02:05:00.475Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: explore_favorite","details":{}}
+{"timestamp":"2026-04-24T02:05:38.363Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_board","details":{}}
+{"timestamp":"2026-04-24T02:12:34.803Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_create_ai","details":{}}
+{"timestamp":"2026-04-24T03:03:15.658Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_complete","details":{}}
+{"timestamp":"2026-04-24T03:03:20.102Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_avatar","details":{}}
+{"timestamp":"2026-04-24T03:03:23.226Z","user":"thuy1@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_profile","details":{}}
+{"timestamp":"2026-04-24T03:04:20.226Z","user":"thuy2@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy2@gmail.com","details":{}}
+{"timestamp":"2026-04-24T03:04:28.176Z","user":"thuy2@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: explore_favorite","details":{}}
+{"timestamp":"2026-04-24T03:04:31.436Z","user":"thuy2@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_profile","details":{}}
+{"timestamp":"2026-04-24T03:04:33.773Z","user":"thuy2@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_avatar","details":{}}
+{"timestamp":"2026-04-24T03:04:36.250Z","user":"thuy2@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_board","details":{}}
+{"timestamp":"2026-04-24T04:19:40.839Z","user":"thuy1@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy1@gmail.com","details":{}}
+{"timestamp":"2026-04-24T05:52:00.356Z","user":"tester99@gmail.com","role":"user","action":"USER_REGISTER","description":"Người dùng mới đăng ký: tester99@gmail.com","details":{}}
+{"timestamp":"2026-04-24T05:54:38.190Z","user":"testuser99@gmail.com","role":"user","action":"USER_REGISTER","description":"Người dùng mới đăng ký: testuser99@gmail.com","details":{}}
+{"timestamp":"2026-04-24T05:56:21.623Z","user":"testuser99@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: testuser99@gmail.com","details":{}}
+{"timestamp":"2026-04-24T05:58:53.560Z","user":"thuy2@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy2@gmail.com","details":{}}
+{"timestamp":"2026-04-24T06:20:02.890Z","user":"thuy2@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_chat","details":{}}
+{"timestamp":"2026-04-24T15:53:21.525Z","user":"thuy5@gmail.com","role":"user","action":"USER_REGISTER","description":"Người dùng mới đăng ký: thuy5@gmail.com","details":{}}
+{"timestamp":"2026-04-24T16:21:29.151Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T16:21:30.740Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_chat","details":{}}
+{"timestamp":"2026-04-24T16:21:32.024Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_search","details":{}}
+{"timestamp":"2026-04-24T16:21:33.940Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_create_ai","details":{}}
+{"timestamp":"2026-04-24T16:21:36.122Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_save","details":{}}
+{"timestamp":"2026-04-24T16:21:39.228Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: explore_favorite","details":{}}
+{"timestamp":"2026-04-24T16:21:42.119Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_profile","details":{}}
+{"timestamp":"2026-04-24T16:21:44.359Z","user":"thuy5@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_board","details":{}}
+{"timestamp":"2026-04-24T16:45:15.375Z","user":"thuy3@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy3@gmail.com","details":{}}
+{"timestamp":"2026-04-24T17:49:29.184Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_login","details":{}}
+{"timestamp":"2026-04-24T17:49:37.185Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_create_ai","details":{}}
+{"timestamp":"2026-04-24T17:49:40.146Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_pro_planner","details":{}}
+{"timestamp":"2026-04-24T17:49:42.009Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_save","details":{}}
+{"timestamp":"2026-04-24T17:49:45.392Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_board","details":{}}
+{"timestamp":"2026-04-24T17:49:46.902Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: social_profile","details":{}}
+{"timestamp":"2026-04-24T18:40:02.792Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: trip_complete","details":{}}
+{"timestamp":"2026-04-24T19:47:47.391Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: daily_chat","details":{}}
+{"timestamp":"2026-04-24T23:03:17.886Z","user":"thuy1@gmail.com","role":"user","action":"USER_LOGIN","description":"Đăng nhập: thuy1@gmail.com","details":{}}
+{"timestamp":"2026-04-25T01:28:55.284Z","user":"thuy3@gmail.com","role":"user","action":"ADD_XP","description":"Hoàn thành nhiệm vụ: explore_favorite","details":{}}

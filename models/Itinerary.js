@@ -10,6 +10,12 @@ const itinerarySchema = new mongoose.Schema({
   interests: { type: String },
   tripDate: { type: Date, default: null }, // Ngày khởi hành do người dùng chọn
   planJson: { type: Object, required: true },
+  status: { 
+    type: String, 
+    enum: ['planning', 'completed', 'missed'], 
+    default: 'planning' 
+  },
+  isDeleted: { type: Boolean, default: false },
   // Nếu hệ thống đang login thì lưu ID user, nếu khách vãng lai thì để trống
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   userName: { type: String, default: 'Khách vãng lai' }, // ♥ Tên hiển thị trong DB
