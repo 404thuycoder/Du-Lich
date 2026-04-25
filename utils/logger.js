@@ -3,27 +3,37 @@ const path = require('path');
 
 const LOG_FILE = path.join(__dirname, '../audit.log');
 
-/**
- * Logs an action to audit.log
- * @param {string} userEmail 
- * @param {string} role 
- * @param {string} action 
- * @param {object} details 
- */
-const logAction = (userEmail, role, action, details = {}) => {
+const logAction = (actionName, description, reqOrUser = {}, extraDetails = {}) => {
   const timestamp = new Date().toISOString();
+  let userEmail = 'System';
+  let role = 'System';
+
+  // Extract user info safely
+  if (reqOrUser.user) {
+    userEmail = reqOrUser.user.email || reqOrUser.user.id || 'Unknown';
+    role = reqOrUser.user.role || 'Unknown';
+  } else if (reqOrUser.email) {
+    userEmail = reqOrUser.email;
+    role = reqOrUser.role || 'Unknown';
+  }
+
   const entry = {
     timestamp,
     user: userEmail,
     role,
-    action,
-    details
+    action: actionName,
+    description: description,
+    details: extraDetails
   };
 
-  const logLine = JSON.stringify(entry) + '\n';
-  fs.appendFile(LOG_FILE, logLine, (err) => {
-    if (err) console.error('Failed to write audit log:', err);
-  });
+  try {
+    const logLine = JSON.stringify(entry) + '\n';
+    fs.appendFile(LOG_FILE, logLine, (err) => {
+      if (err) console.error('Failed to write audit log:', err);
+    });
+  } catch (err) {
+    console.error('Circular JSON or other error in logger:', err);
+  }
 };
 
 module.exports = logAction;

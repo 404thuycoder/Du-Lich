@@ -19,7 +19,7 @@ const optionalAuth = (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded.user;
+      req.user = decoded.user || decoded.account || decoded;
     } catch (e) {}
   }
   next();
@@ -27,7 +27,7 @@ const optionalAuth = (req, res, next) => {
 
 router.post('/', optionalAuth, async (req, res) => {
   try {
-    const { message, coords, itinerary, activeTrip, deviceId, role } = req.body;
+    const { message, coords, itinerary, activeTrip, deviceId, role, sessionId } = req.body;
     
     if (!message) {
       return res.status(400).json({ success: false, answer: 'Vui lòng nhập câu hỏi.' });
@@ -37,26 +37,37 @@ router.post('/', optionalAuth, async (req, res) => {
     const sessionKey = req.user ? req.user.id : (deviceId || 'anonymous_guest');
 
     // --- QUICK RESPONSE ---
+    const targetLang = req.body.lang || 'auto';
     const lowerMsg = message.toLowerCase().trim().replace(/[?.,!]$/, "");
     const quickGreetings = ['alo', 'chào', 'hi', 'hello', 'ơi', 'ê', 'hey', 'ê hả'];
+    
     if (quickGreetings.includes(lowerMsg)) {
-      return res.json({ 
-        success: true, 
-        answer: "Chào bạn! Mình là Trợ lý du lịch WanderViệt đây. Bạn cần mình tư vấn địa điểm nào hay có thắc mắc gì về chuyến đi không?", 
-        source: 'quick-response' 
-      });
+      // Chỉ sử dụng Quick Response tiếng Việt nếu:
+      // 1. targetLang là 'vi'
+      // 2. targetLang là 'auto' VÀ từ khóa chào hỏi là thuần Việt
+      const isVietnameseIntent = (targetLang === 'vi') || (targetLang === 'auto' && ['alo', 'chào', 'ơi', 'ê', 'ê hả'].includes(lowerMsg));
+      
+      // Nếu là ngôn ngữ khác (en, jp, kr, fr), BẮT BUỘC bỏ qua Quick Response để AI tự trả lời đúng thứ tiếng
+      if (isVietnameseIntent) {
+        return res.json({ 
+          success: true, 
+          answer: "Chào bạn! Mình là Trợ lý du lịch WanderViệt đây. Bạn cần mình tư vấn địa điểm nào hay có thắc mắc gì về chuyến đi không?", 
+          source: 'quick-response' 
+        });
+      }
     }
 
-    // 1. Phân tích Lịch sử hội thoại từ SERVER (Trí nhớ máy chủ)
+    // 1. Phân tích Lịch sử hội thoại từ SERVER theo Session
     let chatHistory = [];
-    if (chatbotDb.readyState === 1) {
+    let currentSessionId = sessionId; // Dùng sessionId từ frontend nếu có
+
+    if (chatbotDb.readyState === 1 && currentSessionId) {
       try {
-        const recentLogs = await Conversation.find({ userId: sessionKey })
+        const recentLogs = await Conversation.find({ sessionId: currentSessionId })
           .sort({ timestamp: -1 })
-          .limit(8); // Lấy 8 câu gần nhất cho Groq (vì nó xử lý rất nhanh context lớn)
+          .limit(10); 
         
         if (recentLogs.length > 0) {
-          // Format cho Groq messages array
           chatHistory = recentLogs.reverse().map(log => ({
             role: log.role === 'user' ? 'user' : 'assistant',
             content: log.text
@@ -89,8 +100,8 @@ router.post('/', optionalAuth, async (req, res) => {
     }
 
     // --- START SMART CACHE (TRÍ NHỚ PHẢN XẠ) ---
-    // Kiểm tra câu hỏi có trong Database chưa để tiết kiệm API và tăng tốc độ
-    if (chatbotDb.readyState === 1 && message.length > 2) {
+    // Kiểm tra câu hỏi có trong Database chưa để tiết kiệm API (Chỉ áp dụng cho tiếng Việt hoặc Auto)
+    if (chatbotDb.readyState === 1 && message.length > 2 && (targetLang === 'vi' || targetLang === 'auto')) {
       try {
         // A. Ưu tiên tìm trong bảng Knowledge (Kiến thức Admin soạn)
         const knowledgeMatch = await Knowledge.findOne({
@@ -110,19 +121,16 @@ router.post('/', optionalAuth, async (req, res) => {
         }
 
         // B. Tìm trong lịch sử hội thoại toàn cầu (Global Conversation Cache)
-        // Lưu ý: Chỉ cache các câu hỏi "chung chung", không chứa từ khóa cá nhân/ngữ cảnh
         const contextKeywords = ['đây', 'bây giờ', 'tối nay', 'hiện tại', 'này', 'mình', 'tôi', 'em'];
         const isContextSensitive = contextKeywords.some(k => lowerMsg.includes(k));
 
         if (!isContextSensitive && lowerMsg.length > 10) {
-          // Tìm câu trả lời gần nhất cho câu hỏi y hệt này
           const prevQuestion = await Conversation.findOne({ 
             role: 'user', 
             text: { $regex: new RegExp(`^${message.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
           }).sort({ timestamp: -1 });
 
           if (prevQuestion) {
-            // Lấy câu trả lời NGAY SAU câu hỏi đó của chính user đó (hoặc bất kỳ ai)
             const prevAnswer = await Conversation.findOne({
               role: 'model',
               timestamp: { $gt: prevQuestion.timestamp }
@@ -161,46 +169,127 @@ NHIỆM VỤ: Hỗ trợ doanh nghiệp tối ưu hóa dịch vụ, giải thíc
 PHONG CÁCH: Gợi mở, thúc đẩy kinh doanh, hỗ trợ đối tác thành công.
 `;
     } else {
-      systemPrompt = `
+      if (req.body.lang && req.body.lang !== 'vi' && req.body.lang !== 'auto') {
+        // Nếu chọn ngôn ngữ nước ngoài, dùng prompt tiếng Anh để tránh gây lú cho AI
+        systemPrompt = `
+ROLE: Friendly tour guide of WanderViệt.
+TASK: Recommend places, plan itineraries, share travel tips and local culture.
+STYLE: Enthusiastic, welcoming. Limit response to under 60 words.
+`;
+      } else {
+        systemPrompt = `
 BẠN LÀ: Hướng dẫn viên du lịch thân thiện của WanderViệt.
 NHIỆM VỤ: Tư đoán địa điểm, lên lịch trình, chia sẻ mẹo du lịch và văn hóa địa phương.
 PHONG CÁCH: Vui vẻ, hào hứng, xưng "mình" gọi "bạn". Giới hạn trả lời dưới 60 từ.
 `;
+      }
     }
 
-    // Thêm ngữ cảnh thời gian thực
+    // Thêm ngữ cảnh thời gian thực & Ngôn ngữ
+    const languageNames = {
+      'vi': 'Tiếng Việt',
+      'en': 'English',
+      'jp': 'Japanese (日本語)',
+      'kr': 'Korean (한국어)',
+      'fr': 'French (Français)'
+    };
+    
+    // Tạo chỉ dẫn ngôn ngữ cực kỳ nghiêm ngặt (Language Jail)
+    let langRule = "";
+    if (targetLang === 'auto') {
+      langRule = "DETECT: Identify the user's language and respond ONLY in that language.";
+    } else {
+      const langName = languageNames[targetLang] || 'Tiếng Việt';
+      // Language Jail: Cấm tuyệt đối ngôn ngữ khác
+      langRule = `STRICT LANGUAGE RULE: You are now in ${langName} MODE. 
+- You MUST respond ONLY in ${langName}. 
+- You are FORBIDDEN from using Vietnamese or any other language. 
+- Even if the user speaks Vietnamese, you must answer in ${langName}.
+- DO NOT start your response with Vietnamese words like 'Chào bạn' or 'Xin chào'.`;
+    }
+
     systemPrompt += `
-NGỮ CẢNH THỜI GIAN THỰC:
-- VỊ TRÍ & LỘ TRÌNH: ${locationContext} | ${tripContext}
-- VAI TRÒ NGƯỜI DÙNG: ${userRole}
+${langRule}
+
+CHARACTER: WanderViệt Assistant (Friendly, helpful).
+CONTEXT: ${locationContext} | ${tripContext}
+USER ROLE: ${userRole}
+LIMIT: Under 60 words.
 `;
 
     try {
-      // 4. Gọi Groq API (Llama 3.3 70B Versatile)
+      // Ép model nhỏ (8B) tuân thủ ngôn ngữ bằng cách nhúng thẳng lệnh vào câu hỏi cuối cùng
+      let finalUserMessage = message;
+      if (targetLang !== 'auto') {
+        const langName = languageNames[targetLang] || 'Tiếng Việt';
+        finalUserMessage = `${message}\n\n[SYSTEM INSTRUCTION: You MUST reply in ${langName}. Do NOT use any other language.]`;
+      } else {
+        finalUserMessage = `${message}\n\n[SYSTEM INSTRUCTION: Detect the language of my message and reply in that same language.]`;
+      }
+
+      // 4. Gọi Groq API (Sử dụng model Llama 3.1 8B Instant để tốc độ phản hồi SIÊU TỐC)
       const completion = await groq.chat.completions.create({
         messages: [
           { role: "system", content: systemPrompt },
           ...chatHistory,
-          { role: "user", content: message }
+          { role: "user", content: finalUserMessage }
         ],
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.7,
-        max_tokens: 150
+        model: "llama-3.1-8b-instant",
+        temperature: 0.6,
+        max_tokens: 180
       });
 
       const aiAnswer = completion.choices[0]?.message?.content || "Mình chưa nghe rõ, bạn nói lại nhé!";
 
-      // 5. LƯU TRÍ NHỚ (Ghi vào DB Server)
+      // 5. LƯU TRÍ NHỚ (Ghi vào DB Server theo Session)
       if (chatbotDb.readyState === 1 && aiAnswer) {
         try {
-          await new Conversation({ userId: sessionKey, role: 'user', text: message }).save();
-          await new Conversation({ userId: sessionKey, role: 'model', text: aiAnswer }).save();
+          // Nếu chưa có sessionId (phiên mới), tạo một cái
+          if (!currentSessionId) {
+            currentSessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            console.log("🆕 Generated new sessionId:", currentSessionId);
+          }
+
+          // Lấy tiêu đề từ tin nhắn đầu tiên (Xử lý thông minh hơn)
+          let title = undefined;
+          const firstMsgCount = await Conversation.countDocuments({ sessionId: currentSessionId });
+          if (firstMsgCount === 0) {
+            // Tự tạo tên ngắn gọn từ câu hỏi
+            let cleanMsg = message.replace(/[?.,!]/g, '').trim();
+            title = cleanMsg.split(' ').slice(0, 6).join(' ');
+            if (cleanMsg.split(' ').length > 6) title += '...';
+            if (!title) title = 'Hội thoại mới';
+            console.log("📝 Set session title:", title);
+          }
+
+
+          await new Conversation({ 
+            userId: sessionKey, 
+            sessionId: currentSessionId,
+            title: title, // Chỉ lưu title nếu đây là tin nhắn đầu tiên
+            role: 'user', 
+            text: message 
+          }).save();
+          
+          await new Conversation({ 
+            userId: sessionKey, 
+            sessionId: currentSessionId,
+            role: 'model', 
+            text: aiAnswer 
+          }).save();
         } catch (saveErr) {
           console.error("Lỗi lưu trí nhớ:", saveErr.message);
         }
+      } else if (chatbotDb.readyState !== 1) {
+        console.warn("⚠️ Chatbot DB not ready (readyState: " + chatbotDb.readyState + "). Message not saved.");
       }
 
-      res.json({ success: true, answer: aiAnswer, source: 'groq-llama3-expert-v5' });
+      res.json({ 
+        success: true, 
+        answer: aiAnswer, 
+        sessionId: currentSessionId,
+        source: 'groq-llama3-expert-v6' 
+      });
 
     } catch (groqError) {
       console.error('❌ Groq API Error Detail:', groqError);
@@ -212,6 +301,85 @@ NGỮ CẢNH THỜI GIAN THỰC:
   } catch (error) {
     console.error('Critical Chat Error:', error);
     res.status(500).json({ success: false, answer: 'Lỗi hệ thống.' });
+  }
+});
+
+// Lấy danh sách các phiên chat của người dùng
+router.get('/sessions', optionalAuth, async (req, res) => {
+  try {
+    const sessionKey = req.user ? req.user.id : (req.query.deviceId || 'anonymous_guest');
+    console.log("🔍 Fetching sessions for userId:", sessionKey);
+    
+    // Group by sessionId to get unique sessions
+    const sessions = await Conversation.aggregate([
+      { $match: { userId: sessionKey, sessionId: { $exists: true, $ne: null } } },
+      { $sort: { timestamp: -1 } },
+      { $group: {
+          _id: "$sessionId",
+          title: { $max: "$title" },
+          updatedAt: { $max: "$timestamp" }
+      }},
+      { $sort: { updatedAt: -1 } },
+      { $limit: 20 }
+    ]);
+    console.log("📊 Sessions found:", sessions.length);
+
+    const formatted = await Promise.all(sessions.map(async s => {
+      let displayTitle = s.title;
+      const sid = s._id;
+      
+      // Kiểm tra nếu tiêu đề rỗng hoặc là mặc định "Hội thoại mới"
+      if (!displayTitle || displayTitle.trim() === 'Hội thoại mới' || displayTitle === 'null') {
+        const firstUserMsg = await Conversation.findOne({ sessionId: sid, role: 'user' }).sort({ timestamp: 1 });
+        if (firstUserMsg && firstUserMsg.text) {
+          let clean = firstUserMsg.text.replace(/[?.,!]/g, '').trim();
+          displayTitle = clean.split(' ').slice(0, 8).join(' ');
+          if (clean.split(' ').length > 8) displayTitle += '...';
+        }
+      }
+
+      if (!displayTitle) displayTitle = 'Hội thoại du lịch';
+
+      return {
+        sessionId: sid,
+        title: displayTitle,
+        updatedAt: s.updatedAt
+      };
+    }));
+
+    res.json({ success: true, sessions: formatted });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi tải danh sách phiên.' });
+  }
+});
+
+// Lấy lịch sử chi tiết của một phiên
+router.get('/history/:sid', optionalAuth, async (req, res) => {
+  try {
+    const { sid } = req.params;
+    const messages = await Conversation.find({ sessionId: sid }).sort({ timestamp: 1 });
+    res.json({ success: true, messages });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi tải lịch sử.' });
+  }
+});
+
+// Xóa một phiên chat
+router.delete('/session/:sid', optionalAuth, async (req, res) => {
+  try {
+    const { sid } = req.params;
+    const sessionKey = req.user ? req.user.id : (req.query.deviceId || 'anonymous_guest');
+    
+    // Đảm bảo người dùng chỉ xóa được chat của chính họ
+    const result = await Conversation.deleteMany({ sessionId: sid, userId: sessionKey });
+    
+    if (result.deletedCount > 0) {
+      res.json({ success: true, message: 'Đã xóa hội thoại.' });
+    } else {
+      res.status(404).json({ success: false, message: 'Không tìm thấy hội thoại hoặc không có quyền xóa.' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi khi xóa hội thoại.' });
   }
 });
 

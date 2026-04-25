@@ -10,7 +10,7 @@ const optionalAuth = (req, res, next) => {
   if (token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
-      req.user = decoded.user;
+      req.user = decoded.user || decoded.account || decoded;
     } catch (e) {
       // Token không hợp lệ, bỏ qua
     }
@@ -39,54 +39,118 @@ const User = require('../models/User'); // ♥ Thêm User model để lấy thô
 // Lên lịch trình
 router.post('/generate', optionalAuth, async (req, res) => {
   try {
-    const { destination, days, budget, interests, companion, tripDate } = req.body;
+    const { destination, days, budget, accommodation, pace, transport, interests, companion, tripDate } = req.body;
 
     if (!destination || !days) {
       return res.status(400).json({ success: false, message: 'Vui lòng cung cấp điểm đến và số ngày.' });
     }
 
-    const prompt = `
-Bạn là Chuyên gia Lên Lịch Trình Du lịch của WanderViệt.
-Bạn có nhiệm vụ thiết kế một lịch trình siêu chi tiết cho khách hàng, dựa vào các thông tin sau:
+    // Pre-process: detect special time-sensitive activities for the prompt
+    const interestsLower = (interests || '').toLowerCase();
+    const hasSunriseActivity = interestsLower.includes('săn mây') || interestsLower.includes('bình minh') || interestsLower.includes('sunrise') || interestsLower.includes('mặt trời mọc');
+    const hasSunsetActivity = interestsLower.includes('hoàng hôn') || interestsLower.includes('sunset');
+    const hasTrekking = interestsLower.includes('trekking') || interestsLower.includes('leo núi');
+
+    const numDays = parseInt(days);
+
+    const prompt = `Bạn là chuyên gia lập lịch du lịch thực tế của WanderViệt. Hãy tạo lịch trình ${numDays} ngày cho chuyến đi sau.
+
+=== THÔNG TIN CHUYẾN ĐI ===
 - Điểm đến: ${destination}
-- Thời gian đi: ${days} ngày
-- Ngân sách: ${budget || 'Tiết kiệm / Tiêu chuẩn'}
-- Đối tượng đi cùng: ${companion || 'Gia đình / Bạn bè'}
-- Sở thích bổ sung: ${interests || 'Mọi thể loại'}
+- Số ngày: ${numDays} ngày (BẮT BUỘC tạo mảng itinerary có ĐÚNG ${numDays} phần tử cho Ngày 1, Ngày 2... đến Ngày ${numDays})
+- Ngân sách tổng cộng: ${budget}
+- Loại lưu trú: ${accommodation}
+- Phương tiện: ${transport}
+- Đi cùng: ${companion}
+- Nhịp độ: ${pace}
+- Yêu cầu đặc biệt: "${interests || 'Không có'}"
+- Chế độ: ${req.body.isShortTerm ? 'HOẠT ĐỘNG NGẮN / ĐI ĂN / ĐI CHƠI TRONG NGÀY' : 'CHUYẾN ĐI DÀI NGÀY'}
+- Thời gian cụ thể (nếu có): ${req.body.outingTime || 'Không có'}
 
-Các địa điểm có sẵn trong hệ thống WanderViệt có thể gợi ý (ưu tiên sử dụng, nếu không có thì lấy thực tế):
-${placesContextList ? placesContextList : 'Sử dụng dữ liệu thực tế tại Việt Nam.'}
+=== QUY TẮC PHÂN TÍCH YÊU CẦU (ĐỌC KỸ TRƯỚC KHI LÀM) ===
 
-YÊU CẦU ĐẦU RA (QUAN TRỌNG):
-Bạn BẮT BUỘC PHẢI trả lời hoàn toàn bằng định dạng JSON theo đúng cấu trúc dưới đây. 
-Tuyệt đối KHÔNG ĐƯỢC sinh ra đoạn text nào ngoài JSON này.
+${hasSunriseActivity ? `!!! CẢNH BÁO ĐẶC BIỆT: Khách muốn "SĂN MÂY / BÌNH MINH / MẶT TRỜI MỌC"
+→ Điều này xảy ra lúc 04:30–06:30 BUỔI SÁNG SỚM, TRƯỚC KHI TRỜI SÁNG.
+→ Ngày có hoạt động này BẮT BUỘC phải bắt đầu lúc 04:00–04:30.
+→ TUYỆT ĐỐI KHÔNG được xếp "săn mây" vào buổi chiều hay tối (14h, 17h, 19h là SAI HOÀN TOÀN).
+→ Sau khi săn mây về (~07:00–08:00), mới ăn sáng và tiếp tục các hoạt động khác.` : ''}
+${hasTrekking ? `→ Hoạt động Trekking/Leo núi: bắt đầu lúc 05:00–06:00 để tránh nắng trưa.` : ''}
+${hasSunsetActivity ? `→ Hoạt động Hoàng hôn: xếp lúc 17:30–19:00.` : ''}
 
+=== QUY TẮC CẤU TRÚC LỊCH (BẮT BUỘC) ===
+1. NGÀY 1 (Di chuyển + khám phá nhẹ):
+   - Bắt đầu sáng tại điểm xuất phát, di chuyển đến ${destination}. Ghi rõ thời gian di chuyển thực tế (VD: xe khách 6 tiếng, máy bay 1.5 tiếng...).
+   - Chỉ có hoạt động nhẹ nhàng sau khi đến nơi (nhận phòng, ăn tối, nghỉ ngơi chuẩn bị sức khỏe).
+2. NGÀY 2 đến NGÀY ${numDays - 1} (Trải nghiệm chính):
+   - Lên lịch đầy đủ mọi hoạt động theo yêu cầu đặc biệt của khách.
+   - Thời gian liên tục từ sáng đến tối, không bỏ trống.
+3. NGÀY CUỐI (NGÀY ${numDays}): 
+   - Sáng: Hoạt động cuối + mua quà lưu niệm.
+   - Chiều: Di chuyển về nhà.
+
+- TỶ LỆ NGÂN SÁCH (QUAN TRỌNG):
+  + Nếu ngân sách thấp (Dưới 1M): hostel/dorm, cơm bình dân, đi xe máy/xe khách.
+  + Nếu ngân sách cao (3M-10M cho 2-3 ngày): PHẢI đề xuất khách sạn 4-5 sao hoặc resort, nhà hàng sang trọng, xe riêng/limousine. TUYỆT ĐỐI không dùng hostel cho người có ngân sách 4.5 triệu đi 2 ngày.
+- Tổng tất cả chi phí PHẢI XẤP XỈ (gần bằng) nhưng KHÔNG VƯỢT ngân sách đã chọn. Nếu khách giàu, hãy tiêu tiền giúp họ vào dịch vụ tốt.
+
+=== KIỂM TRA TRƯỚC KHI XUẤT ===
+Trước khi trả về JSON, hãy tự kiểm tra:
+✓ Mảng itinerary có đúng ${numDays} phần tử không?
+✓ Nếu khách muốn săn mây, ngày đó có bắt đầu lúc 04:00–04:30 không?
+✓ ĐỊA PHƯƠNG HÓA: Nếu đi từ Hà Nội, dùng bến xe Mỹ Đình/Giáp Bát. Nếu đi từ Sài Gòn, dùng bến xe Miền Đông/Miền Tây. KHÔNG RÂU ÔNG NỌ CẮM CẰM BÀ KIA.
+✓ THỰC TẾ DI CHUYỂN: Hà Nội - Bắc Giang/Bắc Ninh/Hải Dương chỉ mất 1-1.5 tiếng. Không được ghi 6 tiếng.
+✓ TÍNH TOÁN CHI PHÍ (QUY TẮC SỐ 1): Tổng chi phí (estimatedCost) PHẢI TRÙNG KHỚP với ngân sách ${req.body.exactBudget || budget}. 
+  - Nếu ngân sách thấp (VD: 500k), TUYỆT ĐỐI KHÔNG được để estimatedCost vọt lên 900k. Điều này là thất bại hoàn toàn.
+  - Bạn PHẢI hy sinh các dịch vụ tốn phí: đi bộ thay vì taxi, ăn bánh mì/xôi thay vì nhà hàng, tham quan công viên/hồ thay vì khu du lịch mất vé.
+  - Phải trừ hao chi phí dự phòng 10-15% trong tổng tính toán.
+  - Mọi hoạt động trong itinerary PHẢI có giá tiền (cost) thực tế và tổng của chúng + khách sạn phải khớp với estimatedCost.
+
+=== FORMAT JSON ĐẦU RA ===
+Chỉ trả về JSON hợp lệ, không có text khác:
 {
-  "tripSummary": "Tóm tắt hấp dẫn về lịch trình...",
-  "estimatedCost": "Chi phí ước tính cá nhân (VD: 4.500.000 VNĐ)",
-  "suggestedHotel": "Tên khách sạn cụ thể + Giá/đêm (VD: Vinpearl Resort - 2tr/đêm)",
+  "tripSummary": "Mô tả ngắn chuyến đi (nêu rõ điểm nổi bật và yêu cầu đặc biệt)",
+  "estimatedCost": "TỔNG CHI PHÍ THỰC TẾ (VNĐ)",
+  "accommodationSuggestion": {
+    "typeLabel": "Loại lưu trú",
+    "icon": "Emoji",
+    "nameAndCost": "Tên khách sạn - Giá/đêm (Giá phải tương xứng với ngân sách ${budget})"
+  },
   "itinerary": [
     {
-       "day": "1 (06:30 - 22:00)",
-       "activities": [
-          { "time": "06:30 - 08:00", "task": "Khởi hành & Ăn sáng", "location": "Phở Bát Đàn - 49 Bát Đàn", "cost": "60.000đ" },
-          { "time": "08:15 - 11:30", "task": "Hoạt động chính", "location": "Tham quan lăng Bác & Hoàng Thành Thăng Long", "cost": "30.000đ" },
-          { "time": "12:00 - 13:30", "task": "Ăn trưa & Nghỉ ngơi", "location": "Bún chả Hương Liên", "cost": "150.000đ" }
-       ]
+      "day": "1 (HH:MM - HH:MM)",
+      "activities": [
+        { "time": "HH:MM - HH:MM", "task": "Tên hoạt động", "location": "Địa điểm cụ thể", "cost": "XXXđ" }
+      ]
     }
   ]
 }
 
-- BẮT BUỘC liệt kê cả Giờ Bắt đầu và Kết thúc của nguyên ngày trong biến "day" (VD: "1 (06:00 - 22:30)").
-- BẮT BUỘC liệt kê Giờ Giấc cụ thể (VD: 07:30, 14:00) thay vì mô tả chung chung (Sáng, Trưa, Chiều) cho các "activities". Mốc thời gian phải liền mạch từ khi ngủ dậy đến lúc đi ngủ.
-- Tổng số phần tử trong mảng "itinerary" phải CỰC KỲ CHÍNH XÁC bằng ${days}.
-- Đảm bảo thời gian chi tiết, không lặp lại, và hợp lý với khoảng cách di chuyển thực tế.
-    `;
+LƯU Ý QUAN TRỌNG NHẤT (PHẢI TUÂN THỦ TUYỆT ĐỐI): 
+- SỐ NGÀY: Bạn được yêu cầu tạo lịch trình ${numDays} ngày. Mảng "itinerary" PHẢI CÓ CHÍNH XÁC ${numDays} PHẦN TỬ. 
+- Nếu ${numDays} = 4, mảng itinerary phải có itinerary[0], itinerary[1], itinerary[2], itinerary[3]. KHÔNG ĐƯỢC THIẾU.
+- CHI PHÍ: Ngân sách là ${budget}. Tổng giá trị (estimatedCost) của khách sạn và tất cả hoạt động PHẢI XẤP XỈ con số này (Sai số tối đa 10%). 
+- CHẤT LƯỢNG: Nếu ngân sách cao, hãy chọn khách sạn đắt nhất và ăn uống sang trọng nhất có thể để tiêu hết tiền của khách.
+- ĐỊA LÝ: Đảm bảo địa điểm (location) chính xác với tỉnh/thành phố ${destination}.
+${req.body.isShortTerm ? `
+=== QUY TẮC RIÊNG CHO HOẠT ĐỘNG NGẮN ===
+1. Không cần chia ngày. Chỉ cần 1-3 hoạt động tập trung vào mục tiêu chính (VD: đi ăn bánh mì thì giới thiệu quán ngon nhất + 1 chỗ ngồi uống nước gần đó).
+2. PHẢI có địa chỉ cực kỳ cụ thể (Số nhà, tên đường).
+3. TripSummary phải thân thiện như một người bạn địa phương giới thiệu.` : ''}`;
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: 'Bạn là chuyên gia du lịch WanderViệt. Chỉ trả về JSON.' },
+        {
+          role: 'system',
+          content: `Bạn là chuyên gia lập lịch du lịch thực địa tại Việt Nam. Nhiệm vụ: tạo lịch trình CHÍNH XÁC, THỰC TẾ theo đúng yêu cầu.
+Quy tắc tuyệt đối:
+- "Săn mây / bình minh" → hoạt động lúc 04:30–06:30 SÁNG SỚM, KHÔNG được xếp chiều tối.
+- Số ngày trong itinerary PHẢI BẰNG số ngày được yêu cầu.
+- Ngày 1 PHẢI tính thời gian di chuyển đến điểm đến.
+- ĐỘ CHÍNH XÁC: Bạn PHẢI cung cấp địa chỉ (location) thực tế, chính xác tại Việt Nam. Không được bịa đặt tên quán hay địa chỉ sai lệch.
+- CHẾ ĐỘ "KHÔNG QUAN TÂM HẠN MỨC": Nếu budget là "Không quan tâm hạn mức", hãy mặc định chọn những dịch vụ CAO CẤP nhất, quán ăn NỔI TIẾNG nhất và KHÔNG cần lo lắng về giá.
+- Chỉ trả về JSON hợp lệ.`
+        },
         { role: 'user', content: prompt }
       ],
       response_format: { type: 'json_object' }
@@ -154,7 +218,7 @@ Khách hàng vừa phản ánh: "${userFeedback}"
 YÊU CẦU:
 Hãy xem xét phản ánh của khách và TẠO LẠI TOÀN BỘ JSON lịch trình mới (sửa những phần khách không thích, giữ nguyên những thứ hợp lý).
 Đầu ra BẮT BUỘC tiếp tục trả về duy nhất chuỗi JSON có đúng cấu trúc:
-{ tripSummary, estimatedCost, suggestedHotel, itinerary (array các ngày, bên trong chứa activities với thuộc tính time, task, location, cost) }.
+{ tripSummary, estimatedCost, accommodationSuggestion: { typeLabel, icon, nameAndCost }, itinerary (array các ngày, bên trong chứa activities với thuộc tính time, task, location, cost) }.
 Thuộc tính "day" của mảng "itinerary" phải chứa chuỗi gồm ngày và giờ bao quát (VD: "1 (06:00 - 22:30)").
 Không bao gồm bất kỳ text nào khác ngoài JSON. Vẫn giữ thời gian cực cụ thể (từ sáng sớm đến tối khuya).
     `;
@@ -204,6 +268,64 @@ Không bao gồm bất kỳ text nào khác ngoài JSON. Vẫn giữ thời gian
   } catch (error) {
     console.error('Planner Refine API Error:', error.message || error);
     res.status(500).json({ success: false, message: 'Lỗi chỉnh sửa AI: ' + (error.message || 'Không rõ') });
+  }
+});
+
+// Gợi ý điểm đến (Discovery)
+router.post('/discover', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ success: false, message: 'Vui lòng nhập yêu cầu.' });
+    }
+
+    const messages = [
+      {
+        role: 'system',
+        content: `Bạn là trợ lý du lịch WanderViệt. Nhiệm vụ của bạn là lắng nghe yêu cầu của khách hàng (ngân sách, sở thích, thời tiết...) và gợi ý những điểm đến phù hợp tại Việt Nam.
+        
+        QUY TẮC:
+        1. Nếu khách hàng đưa ra ít thông tin (VD: "500k đi đâu?"), TUYỆT ĐỐI không được gợi ý ngay. Hãy đặt ít nhất 2-3 câu hỏi để tìm hiểu:
+           - Bạn định đi trong bao nhiêu lâu (1 ngày hay qua đêm)?
+           - Bạn đi từ đâu? (Quan trọng để tính phí di chuyển)
+           - Bạn thích kiểu đi chill, ăn uống hay check-in sống ảo?
+           - Bạn đi một mình hay với ai?
+        2. Nếu thông tin đã đủ, hãy gợi ý 2-3 địa danh cụ thể kèm theo lý do vì sao nó hợp với ngân sách đó.
+        3. Phân tích ngân sách thực tế cực kỳ khắt khe. Nếu ngân sách quá thấp (VD: 200k), hãy cảnh báo khách và gợi ý những chỗ gần nhà.
+        4. Trả về JSON theo cấu trúc:
+        {
+          "answer": "Câu trả lời của AI cho khách hàng",
+          "suggestions": ["Địa danh 1", "Địa danh 2"], 
+          "finalSelection": "Tên địa danh",
+          "suggestedBudget": "Không quan tâm hạn mức", // Mặc định nếu khách không nhắc tiền. Hoặc chọn mức phù hợp: "dưới 1 triệu VNĐ", "1 đến 3 triệu VNĐ", "3 đến 7 triệu VNĐ", "7 đến 15 triệu VNĐ", "trên 15 triệu VNĐ"
+          "exactBudget": "500.000 VNĐ",
+          "isShortTerm": true, // true nếu là đi ăn, đi chơi ngắn trong vài tiếng hoặc trong ngày, false nếu là đi du lịch nhiều ngày
+          "outingTime": "21:00" // Giờ đi nếu khách nhắc tới
+        }`
+      }
+    ];
+
+    // Thêm lịch sử nếu có
+    if (history && Array.isArray(history)) {
+      history.forEach(h => {
+        messages.push({ role: h.role, content: h.content });
+      });
+    }
+
+    messages.push({ role: 'user', content: message });
+
+    const response = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: messages,
+      response_format: { type: 'json_object' }
+    });
+
+    const aiRes = JSON.parse(response.choices[0].message.content);
+    res.json({ success: true, ...aiRes });
+  } catch (error) {
+    console.error('Discovery API Error:', error);
+    res.status(500).json({ success: false, message: 'Lỗi gợi ý AI.' });
   }
 });
 
@@ -279,12 +401,72 @@ router.post('/save-manual', auth, async (req, res) => {
 // Lấy danh sách lịch trình của Tôi
 router.get('/my-trips', auth, async (req, res) => {
   try {
-    // Chỉ lấy lịch trình có gắn userId hiện tại
+    // Lấy tất cả lịch trình của user này
     const trips = await Itinerary.find({ userId: req.user.id }).sort({ createdAt: -1 });
     res.json({ success: true, data: trips });
   } catch (error) {
     console.error('Planner DB Error:', error);
     res.status(500).json({ success: false, message: 'Lỗi server khi lấy danh sách.' });
+  }
+});
+
+// Cập nhật trạng thái chuyến đi (Hoàn thành, Bỏ lỡ)
+router.put('/status/:id', auth, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['planning', 'completed', 'missed'].includes(status)) {
+      return res.status(400).json({ success: false, message: 'Trạng thái không hợp lệ.' });
+    }
+    const itin = await Itinerary.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { status },
+      { new: true }
+    );
+    if (!itin) return res.status(404).json({ success: false, message: 'Không tìm thấy chuyến đi.' });
+    res.json({ success: true, message: 'Đã cập nhật trạng thái.', data: itin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server.' });
+  }
+});
+
+// Xóa tạm thời (vào thùng rác)
+router.delete('/itinerary/:id', auth, async (req, res) => {
+  try {
+    const itin = await Itinerary.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { isDeleted: true },
+      { new: true }
+    );
+    if (!itin) return res.status(404).json({ success: false, message: 'Không tìm thấy chuyến đi.' });
+    res.json({ success: true, message: 'Đã chuyển vào Thùng rác.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server.' });
+  }
+});
+
+// Khôi phục & Lên lịch lại (về Planning và không còn Deleted)
+router.put('/restore/:id', auth, async (req, res) => {
+  try {
+    const itin = await Itinerary.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.id },
+      { isDeleted: false, status: 'planning' },
+      { new: true }
+    );
+    if (!itin) return res.status(404).json({ success: false, message: 'Không tìm thấy chuyến đi.' });
+    res.json({ success: true, message: 'Đã đưa lại vào danh sách Đang lên lịch.', data: itin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server.' });
+  }
+});
+
+// Xóa vĩnh viễn
+router.delete('/permanent/:id', auth, async (req, res) => {
+  try {
+    const itin = await Itinerary.findOneAndDelete({ _id: req.params.id, userId: req.user.id });
+    if (!itin) return res.status(404).json({ success: false, message: 'Không tìm thấy chuyến đi.' });
+    res.json({ success: true, message: 'Đã xóa vĩnh viễn.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi server.' });
   }
 });
 

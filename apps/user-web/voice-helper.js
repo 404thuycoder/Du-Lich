@@ -38,6 +38,9 @@ var VoiceGuide = /*#__PURE__*/function () {
       var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
         console.error("Trình duyệt không hỗ trợ Web Speech API.");
+        if (window.SharedUI && window.SharedUI.showToast) {
+            window.SharedUI.showToast("Trình duyệt của bạn không hỗ trợ tính năng nhận diện giọng nói.", "error");
+        }
         return;
       }
       this.recognition = new SpeechRecognition();

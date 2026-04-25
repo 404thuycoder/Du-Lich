@@ -40,11 +40,12 @@
       <!-- Desktop Nav -->
       <nav id="site-nav" class="site-nav" data-nav>
         <ul class="nav-list">
-          <li><a href="#destinations">Điểm đến</a></li>
-          <li><a href="#smart-search">Tìm theo bạn</a></li>
-          <li><a href="#planner">Lịch trình</a></li>
-          <li><a href="planner.html">✨ AI Trợ lý</a></li>
-          <li><a href="directions-leaflet.html">🗺️ Chỉ đường</a></li>
+          <li><a href="index.html" class="nav-link active">🏠 Trang chủ</a></li>
+          <li><a href="index.html#destinations" class="nav-link">📍 Điểm du lịch</a></li>
+          <li><a href="planner.html" class="nav-link">✨ AI Trợ lý</a></li>
+          <li><a href="my-trips.html" class="nav-link">🎒 Chuyến đi</a></li>
+          <li><a href="quests.html" class="nav-link">🎯 Nhiệm vụ</a></li>
+          <li><a href="leaderboard.html" class="nav-link">🏆 BXH</a></li>
         </ul>
       </nav>
 
@@ -66,6 +67,7 @@
 
         <!-- User Avatar + Dropdown (authenticated) -->
         <div class="user-bubble" data-user-bubble data-auth-show style="display:none">
+          <span id="header-user-rank" style="font-size:0.75rem;font-weight:700;margin-right:4px;opacity:0.9;"></span>
           <button type="button" class="user-bubble__btn" data-user-toggle aria-expanded="false" aria-haspopup="true" aria-label="Menu tài khoản">
             <img src="" alt="Avatar" class="user-avatar-img" data-user-avatar hidden />
             <span class="user-bubble__initial" data-user-initial>?</span>
@@ -79,19 +81,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 Hồ sơ của tôi
               </button>
-              <a href="my-trips.html" class="user-dropdown__item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-                Chuyến đi của tôi
-              </a>
               
-              <a href="planner.html" class="user-dropdown__item" style="color: var(--color-primary); font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                ✨ AI Trợ lý du lịch
-              </a>
-              
-              <!-- Workspace Link (Business only) - Removed to enforce strict portal separation -->
-              
-              <!-- Become a Partner (User only) - Removed to enforce strict portal separation -->
               <div class="user-dropdown__divider"></div>
               <button type="button" class="user-dropdown__item user-dropdown__item--danger" data-logout>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -116,11 +106,22 @@
           <h1 class="hero-v2__title">Khám phá Việt Nam <br><span class="text-gradient">Với Trợ Lý AI</span></h1>
           <p class="hero-v2__lead">Hỏi bất cứ điều gì, lên lịch trình thông minh và khám phá điểm đến theo sở thích riêng của bạn.</p>
           
-          <form class="hero-v2__search" role="search">
+          <form class="hero-v2__search" role="search" id="heroSearchForm" autocomplete="off">
             <div class="search-box">
               <span class="search-icon">🔍</span>
-              <input type="search" placeholder="Bạn muốn đi đâu? (Đà Lạt, Phú Quốc...)" data-search-input />
+              <input type="search" placeholder="Bạn muốn đi đâu? (Đà Lạt, Phú Quốc...)" data-search-input id="heroSearchInput" />
+              <button type="button" class="btn-icon visual-search-trigger" id="visualSearchTrigger" title="Tìm kiếm bằng hình ảnh" style="background:none;border:none;cursor:pointer;padding:0 8px;font-size:1.2rem;color:var(--text-muted);flex-shrink:0;" onclick="WanderUI && WanderUI.openVisualSearch ? WanderUI.openVisualSearch() : alert('Tính năng đang tải...')" aria-label="Tìm theo hình ảnh">📷</button>
               <button type="submit" class="hero-v2__btn">Bắt đầu ngay</button>
+            </div>
+            <!-- Dynamic Suggestions Dropdown -->
+            <div class="search-suggestions" id="searchSuggestions">
+              <div class="search-suggestions__header">
+                <span id="suggestionLabel">Gợi ý điểm đến</span>
+                <button type="button" class="search-suggestions__clear-all" id="clearSearchHistory" style="display:none;">Xóa tất cả</button>
+              </div>
+              <div class="search-suggestions__list" id="suggestionList">
+                <!-- Items injected via JS -->
+              </div>
             </div>
           </form>
 
@@ -350,7 +351,7 @@
           <div class="planner-map-wrap">
             <div id="trip-map" class="trip-map" role="application" aria-label="Bản đồ lịch trình"></div>
             <div class="map-floating-hud">
-              <button type="button" class="btn-map-nav-start" data-map-start-btn>🚀 Bắt đầu di chuyển</button>
+              <button type="button" class="btn-map-hud" data-map-fullscreen-btn title="Toàn màn hình">⛶</button>
             </div>
           </div>
         </div>
@@ -722,8 +723,39 @@
     </button>
     <div id="chat-panel" class="chat-panel" data-chat-panel hidden>
       <div class="chat-panel__head">
-        <strong>Trợ lý WanderViệt</strong>
+        <div class="chat-panel__head-left">
+          <strong>Trợ lý WanderViệt</strong>
+        </div>
+        <div class="chat-panel__head-actions" style="display:flex; gap:8px; align-items:center; margin-left:auto; margin-right:8px;">
+          <div class="chat-lang-switcher" title="Chọn ngôn ngữ">
+            <button type="button" class="btn-icon-sm chat-lang-btn">🌐 <span class="current-lang-code">VI</span></button>
+            <div class="chat-lang-dropdown">
+              <button type="button" data-lang="auto">Auto (Tự nhận)</button>
+              <button type="button" data-lang="vi">Tiếng Việt (VI)</button>
+              <button type="button" data-lang="en">English (EN)</button>
+              <button type="button" data-lang="jp">日本語 (JP)</button>
+              <button type="button" data-lang="kr">한국어 (KR)</button>
+              <button type="button" data-lang="fr">Français (FR)</button>
+            </div>
+          </div>
+          <button type="button" class="btn-icon-sm" title="Chat mới" data-chat-new-btn>➕</button>
+          <button type="button" class="btn-icon-sm" title="Lịch sử chat" data-chat-history-btn>🕒</button>
+        </div>
         <button type="button" class="chat-panel__close" data-chat-toggle aria-label="Đóng chat">×</button>
+      </div>
+
+      <!-- View Lịch sử (Dạng Sidebar trượt từ trái) -->
+      <div class="chat-sessions-sidebar" data-chat-sessions-view hidden>
+        <div class="chat-sessions-sidebar__inner">
+          <div class="chat-sessions-sidebar__header">
+            <span>Lịch sử trò chuyện</span>
+            <button type="button" class="btn-close-sidebar" data-chat-history-close>×</button>
+          </div>
+          <div class="chat-sessions-sidebar__body" data-chat-sessions-list>
+            <!-- Sessions list rendered here -->
+            <div class="chat-sessions-loading">Đang tải lịch sử...</div>
+          </div>
+        </div>
       </div>
       <p class="chat-panel__disclaimer">Trợ lý ghép gợi ý từ dữ liệu trang + sở thích bạn lưu; không phải AI tổng quát.
         Visa/y tế vẫn cần nguồn chính thức.</p>
@@ -804,15 +836,15 @@
     <div id="live-caption">Đang nghe...</div>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=1776819067180"
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=888888888"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="places-data.js?v=1776819067180"></script>
+  <script src="places-data.js?v=888888888"></script>
   <!-- Polyfill for babel async to ES5 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/regenerator-runtime/0.13.11/runtime.min.js?v=1776819067180"></script>
-  <script src="SharedUI.js?v=1776819067180"></script>
-  <script src="voice-helper.js?v=1776819067180"></script>
-  <script src="chat-brain.js?v=1776819067180"></script>
-  <script src="main.js?v=1776819067180" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/regenerator-runtime/0.13.11/runtime.min.js?v=888888888"></script>
+  <script src="SharedUI.js?v=888888888"></script>
+  <script src="voice-helper.js?v=888888888"></script>
+  <script src="chat-brain.js?v=888888888"></script>
+  <script src="main.js?v=888888888" defer></script>
 </body>
 
 </html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sprite Debug</title>
+<style>
+body { background: #1a1a2e; color: white; font-family: sans-serif; padding: 20px; }
+h2 { margin-bottom: 10px; }
+.grid { display: grid; grid-template-columns: repeat(6, 130px); gap: 10px; margin-top: 20px; }
+.cell {
+  width: 120px; height: 80px;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255,255,255,0.05);
+}
+.cell-inner {
+  width: 120px; height: 80px;
+  background-image: url('assets/img/rank-sprites.png');
+  background-repeat: no-repeat;
+}
+.label { font-size: 9px; text-align: center; margin-top: 2px; color: #aaa; }
+
+/* Full sprite view */
+.full-sprite {
+  background-image: url('assets/img/rank-sprites.png');
+  background-size: 768px 512px; /* Scale down 50% */
+  width: 768px; height: 512px;
+  border: 2px solid #444;
+  position: relative;
+  margin: 20px 0;
+}
+.grid-line-v {
+  position: absolute; top: 0; height: 100%; width: 1px;
+  background: rgba(255,0,0,0.5);
+}
+.grid-line-h {
+  position: absolute; left: 0; width: 100%; height: 1px;
+  background: rgba(255,0,0,0.5);
+}
+
+/* Individual rank badge tests */
+.rank-tests { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 30px; }
+.rank-test {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.rank-sprite-test {
+  width: 80px; height: 80px;
+  background-image: url('assets/img/rank-sprites.png');
+  background-repeat: no-repeat;
+  background-size: 1536px 1024px; /* Full size */
+  border: 1px dashed rgba(255,255,255,0.3);
+}
+</style>
+</head>
+<body>
+
+<h2>Full Sprite Sheet (50% zoom)</h2>
+<div class="full-sprite" id="fullSprite">
+  <!-- Grid lines for 6x6 = each cell 128x85.3px at 50% zoom -->
+  <div class="grid-line-v" style="left: 128px;"></div>
+  <div class="grid-line-v" style="left: 256px;"></div>
+  <div class="grid-line-v" style="left: 384px;"></div>
+  <div class="grid-line-v" style="left: 512px;"></div>
+  <div class="grid-line-v" style="left: 640px;"></div>
+  <div class="grid-line-h" style="top: 85px;"></div>
+  <div class="grid-line-h" style="top: 170px;"></div>
+  <div class="grid-line-h" style="top: 256px;"></div>
+  <div class="grid-line-h" style="top: 341px;"></div>
+  <div class="grid-line-h" style="top: 427px;"></div>
+</div>
+
+<h2>Individual Icon Tests (each cell = 256x170.67px in full size)</h2>
+<div class="rank-tests">
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px 0px;"></div>
+  <span>Row0 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px 0px;"></div>
+  <span>Row0 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px 0px;"></div>
+  <span>Row0 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px 0px;"></div>
+  <span>Row0 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px 0px;"></div>
+  <span>Row0 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px 0px;"></div>
+  <span>Row0 Col5</span>
+</div>
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px -171px;"></div>
+  <span>Row1 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px -171px;"></div>
+  <span>Row1 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px -171px;"></div>
+  <span>Row1 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px -171px;"></div>
+  <span>Row1 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px -171px;"></div>
+  <span>Row1 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px -171px;"></div>
+  <span>Row1 Col5</span>
+</div>
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px -341px;"></div>
+  <span>Row2 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px -341px;"></div>
+  <span>Row2 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px -341px;"></div>
+  <span>Row2 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px -341px;"></div>
+  <span>Row2 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px -341px;"></div>
+  <span>Row2 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px -341px;"></div>
+  <span>Row2 Col5</span>
+</div>
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px -512px;"></div>
+  <span>Row3 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px -512px;"></div>
+  <span>Row3 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px -512px;"></div>
+  <span>Row3 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px -512px;"></div>
+  <span>Row3 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px -512px;"></div>
+  <span>Row3 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px -512px;"></div>
+  <span>Row3 Col5</span>
+</div>
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px -683px;"></div>
+  <span>Row4 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px -683px;"></div>
+  <span>Row4 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px -683px;"></div>
+  <span>Row4 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px -683px;"></div>
+  <span>Row4 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px -683px;"></div>
+  <span>Row4 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px -683px;"></div>
+  <span>Row4 Col5</span>
+</div>
+
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: 0px -853px;"></div>
+  <span>Row5 Col0</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -256px -853px;"></div>
+  <span>Row5 Col1</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -512px -853px;"></div>
+  <span>Row5 Col2</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -768px -853px;"></div>
+  <span>Row5 Col3</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1024px -853px;"></div>
+  <span>Row5 Col4</span>
+</div>
+<div class="rank-test">
+  <div class="rank-sprite-test" style="background-position: -1280px -853px;"></div>
+  <span>Row5 Col5</span>
+</div>
+
+</div>
+</body>
+</html>

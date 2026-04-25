@@ -113,21 +113,18 @@
 .companion-fab-wrapper .companion-fab {
   position: relative;
   inset: auto;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   bottom: auto;
   right: auto;
   border-width: 2px;
   z-index: 1;
+  background: var(--gradient-primary);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .companion-fab-wrapper .mic-icon {
-  font-size: 1.1rem;
-}
-
-.companion-fab-wrapper .pulse-rings {
-  width: 100%;
-  height: 100%;
+  font-size: 1.2rem;
 }
 
 .companion-fab:hover {
