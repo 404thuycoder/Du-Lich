@@ -7,6 +7,8 @@ const systemLogSchema = new mongoose.Schema({
   userName: { type: String },
   userRole: { type: String },
   targetId: { type: String },
+  ip: { type: String },
+  userAgent: { type: String },
   timestamp: { type: Date, default: Date.now }
 });
 

@@ -7,7 +7,8 @@ const businessAccountSchema = new mongoose.Schema({
   password: { type: String, required: true },
   avatar: { type: String, default: '' },
   phone: { type: String, default: '' },
-  status: { type: String, enum: ['active', 'pending', 'suspended'], default: 'pending' },
+  status: { type: String, enum: ['active', 'pending', 'suspended'], default: 'active' },
+  lastActive: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
 

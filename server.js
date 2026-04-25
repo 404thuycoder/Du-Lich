@@ -12,6 +12,7 @@ if (process.env.GROQ_API_KEY_NAVIGATION) process.env.GROQ_API_KEY_NAVIGATION = p
 
 const PORT = 3000;
 const app = express();
+app.set('trust proxy', true);
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));

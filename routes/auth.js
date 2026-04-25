@@ -49,6 +49,16 @@ const verifyPortalToken = (expectedPortal) => (req, res, next) => {
       name: account.name,
       portal: account.portal
     };
+
+    // Update lastActive in background
+    if (account.id) {
+      const modelMap = { 'user': User, 'business': BusinessAccount, 'admin': AdminAccount };
+      const Model = modelMap[account.portal];
+      if (Model) {
+        Model.findByIdAndUpdate(account.id, { lastActive: new Date() }).catch(() => {});
+      }
+    }
+    
     next();
   } catch (_err) {
     res.status(401).json({ success: false, message: 'Token không hợp lệ' });
@@ -104,7 +114,7 @@ router.post('/user/register', async (req, res) => {
     });
     await user.save();
     const token = signPortalToken(user, 'user', 'user');
-    await logAction('USER_REGISTER', `Người dùng mới đăng ký: ${user.email}`, { user: { id: user.id, email: user.email, displayName: user.name, role: user.role } });
+    await logAction(user.email, 'user', 'USER_REGISTER', { user: { id: user.id, email: user.email, displayName: user.name, role: user.role } }, req.ip, req.headers['user-agent']);
     res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name, role: 'user', avatar: user.avatar, status: user.status } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -120,7 +130,7 @@ router.post('/user/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
     const token = signPortalToken(user, 'user', 'user');
-    await logAction('USER_LOGIN', `Đăng nhập: ${user.email}`, { user: { id: user.id, email: user.email, displayName: user.displayName || user.name, role: user.role } });
+    await logAction(user.email, 'user', 'USER_LOGIN', { user: { id: user.id, email: user.email, displayName: user.displayName || user.name, role: user.role } }, req.ip, req.headers['user-agent']);
     res.json({ success: true, token, user: { id: user.id, email: user.email, name: user.name, role: 'user', avatar: user.avatar, status: user.status } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -149,7 +159,7 @@ router.post('/business/register', async (req, res) => {
       displayName: name,
       email: normalizedEmail,
       password: await bcrypt.hash(password, 10),
-      status: 'pending'
+      status: 'active'
     });
     await account.save();
     const token = signPortalToken(account, 'business', 'business');
@@ -167,6 +177,7 @@ router.post('/business/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
     const token = signPortalToken(account, 'business', 'business');
+    await logAction(account.email, 'business', 'BUSINESS_LOGIN', { email: account.email, id: account._id }, req.ip, req.headers['user-agent']);
     res.json({ success: true, token, user: { id: account.id, email: account.email, name: account.name, role: 'business', status: account.status, avatar: account.avatar } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -193,7 +204,7 @@ router.post('/admin/create', adminTokenAuth, async (req, res) => {
     if (req.user.role !== 'superadmin') {
       return res.status(403).json({ success: false, message: 'Chỉ Super Admin mới được tạo tài khoản admin mới' });
     }
-    const { name, email, password } = req.body;
+    const { name, email, password, permissions } = req.body;
     const normalizedEmail = String(email || '').toLowerCase();
     let account = await AdminAccount.findOne({ email: normalizedEmail });
     if (account) return res.status(400).json({ success: false, message: 'Email admin đã tồn tại' });
@@ -203,7 +214,8 @@ router.post('/admin/create', adminTokenAuth, async (req, res) => {
       email: normalizedEmail,
       password: await bcrypt.hash(password, 10),
       role: 'admin',
-      status: 'active'
+      status: 'active',
+      permissions: permissions || ['overview']
     });
     await account.save();
     const token = signPortalToken(account, 'admin', account.role);
@@ -222,6 +234,7 @@ router.post('/admin/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, account.password);
     if (!isMatch) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
     const token = signPortalToken(account, 'admin', account.role);
+    await logAction(account.email, account.role, 'ADMIN_LOGIN', { email: account.email, role: account.role }, req.ip, req.headers['user-agent']);
     res.json({ success: true, token, user: { id: account.id, email: account.email, name: account.name, role: account.role, status: account.status, avatar: account.avatar } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -274,6 +287,7 @@ router.put('/profile', auth, async (req, res) => {
     }
 
     await user.save();
+    await logAction(user.email, user.role, 'USER_PROFILE_UPDATED', { changed: Object.keys(req.body) }, req.ip, req.headers['user-agent']);
     res.json({ success: true, user });
   } catch (err) {
     console.error(err.message);
@@ -302,6 +316,7 @@ router.put('/password', auth, async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
     await user.save();
+    await logAction(user.email, user.role, 'USER_PASSWORD_CHANGED', {}, req.ip, req.headers['user-agent']);
     
     res.json({ success: true, message: 'Đổi mật khẩu thành công' });
   } catch (err) {

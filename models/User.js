@@ -39,6 +39,7 @@ const userSchema = new mongoose.Schema({
     status: { type: String, enum: ['scheduled', 'experienced', 'missed'] },
     updatedAt: { type: Date, default: Date.now }
   }],
+  lastActive: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -3,6 +3,7 @@ const router = express.Router();
 const { auth, JWT_SECRET } = require('./auth');
 const Groq = require('groq-sdk');
 const jwt = require('jsonwebtoken');
+const logAction = require('../utils/logger');
 
 // Middleware xác thực tùy chọn: có token thì gắn user, không có vẫn cho qua
 const optionalAuth = (req, res, next) => {
@@ -124,12 +125,15 @@ Tuyệt đối KHÔNG ĐƯỢC sinh ra đoạn text nào ngoài JSON này.
       userEmail
     });
     const savedDoc = await newItin.save();
+    if (req.user) {
+      await logAction(userEmail, 'user', 'ITINERARY_GENERATED', { destination, days, itineraryId: savedDoc._id });
+    }
 
     res.json({ success: true, plan: aiPlanJson, itineraryId: savedDoc._id });
   } catch (error) {
     console.error('❌ Planner API Error Detail:', error);
     if (error.response && error.response.data) {
-        console.error('Planner Error Response Data:', JSON.stringify(error.response.data));
+      console.error('Planner Error Response Data:', JSON.stringify(error.response.data));
     }
     res.status(500).json({ success: false, message: 'Lỗi gọi Trợ lý AI: ' + (error.message || 'Không xác định') });
   }
@@ -139,7 +143,7 @@ Tuyệt đối KHÔNG ĐƯỢC sinh ra đoạn text nào ngoài JSON này.
 router.post('/refine', async (req, res) => {
   try {
     const { oldPlanJson, userFeedback } = req.body;
-    
+
     if (!oldPlanJson || !userFeedback) {
       return res.status(400).json({ success: false, message: 'Lỗi thiếu dữ liệu tinh chỉnh.' });
     }
@@ -193,13 +197,16 @@ Không bao gồm bất kỳ text nào khác ngoài JSON. Vẫn giữ thời gian
           interests: oldItin.interests,
           planJson: newPlanJson,
           // Nếu oldItin đã assign cho user (vì đã ấn Save), thì bản Refine này chưa tự động save để tránh rác
-          userId: null 
+          userId: null
         });
         const savedDoc = await refinedItin.save();
         newItineraryId = savedDoc._id;
       }
     }
 
+    if (newItineraryId && req.user) {
+      await logAction(req.user.email, 'user', 'ITINERARY_REFINED', { itineraryId: newItineraryId });
+    }
     res.json({ success: true, plan: newPlanJson, itineraryId: newItineraryId });
   } catch (error) {
     console.error('Planner Refine API Error:', error.message || error);
@@ -269,6 +276,7 @@ router.post('/save-manual', auth, async (req, res) => {
     });
 
     const savedDoc = await newItin.save();
+    await logAction(userEmail, 'user', 'ITINERARY_SAVED_MANUAL', { destination, itineraryId: savedDoc._id });
     res.json({ success: true, message: 'Đã lưu vào danh sách của bạn!', itineraryId: savedDoc._id });
   } catch (error) {
     console.error('Save Manual Error:', error);

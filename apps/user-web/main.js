@@ -2741,4 +2741,36 @@
       }
     }, 500);
   }
+
+  /* --- REAL-TIME ACTIVITY HEARTBEAT --- */
+  // Every 1 minute, send a small ping to the server if logged in
+  function startHeartbeat() {
+    var lastPing = 0;
+    function ping() {
+      var now = Date.now();
+      if (now - lastPing < 30000) return; // Prevent too many pings
+      var token = localStorage.getItem("wander_token");
+      if (!token) return;
+      
+      fetch('/api/auth/user/me', {
+        headers: { 'x-auth-token': token }
+      }).then(function() {
+        lastPing = Date.now();
+      }).catch(function() {});
+    }
+
+    // Ping on load and then every 60s
+    setTimeout(ping, 2000); 
+    setInterval(ping, 60000);
+
+    // Also ping on mouse move or keypress (throttled)
+    window.addEventListener('mousemove', function() {
+      if (Date.now() - lastPing > 60000) ping();
+    }, { passive: true });
+    window.addEventListener('keypress', function() {
+      if (Date.now() - lastPing > 60000) ping();
+    }, { passive: true });
+  }
+  
+  startHeartbeat();
 })();

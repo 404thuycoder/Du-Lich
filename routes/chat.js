@@ -20,7 +20,7 @@ const optionalAuth = (req, res, next) => {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       req.user = decoded.user;
-    } catch (e) {}
+    } catch (e) { }
   }
   next();
 };
@@ -28,7 +28,7 @@ const optionalAuth = (req, res, next) => {
 router.post('/', optionalAuth, async (req, res) => {
   try {
     const { message, coords, itinerary, activeTrip, deviceId, role } = req.body;
-    
+
     if (!message) {
       return res.status(400).json({ success: false, answer: 'Vui lòng nhập câu hỏi.' });
     }
@@ -40,10 +40,10 @@ router.post('/', optionalAuth, async (req, res) => {
     const lowerMsg = message.toLowerCase().trim().replace(/[?.,!]$/, "");
     const quickGreetings = ['alo', 'chào', 'hi', 'hello', 'ơi', 'ê', 'hey', 'ê hả'];
     if (quickGreetings.includes(lowerMsg)) {
-      return res.json({ 
-        success: true, 
-        answer: "Chào bạn! Mình là Trợ lý du lịch WanderViệt đây. Bạn cần mình tư vấn địa điểm nào hay có thắc mắc gì về chuyến đi không?", 
-        source: 'quick-response' 
+      return res.json({
+        success: true,
+        answer: "Chào bạn! Mình là Trợ lý du lịch WanderViệt đây. Bạn cần mình tư vấn địa điểm nào hay có thắc mắc gì về chuyến đi không?",
+        source: 'quick-response'
       });
     }
 
@@ -54,7 +54,7 @@ router.post('/', optionalAuth, async (req, res) => {
         const recentLogs = await Conversation.find({ userId: sessionKey })
           .sort({ timestamp: -1 })
           .limit(8); // Lấy 8 câu gần nhất cho Groq (vì nó xử lý rất nhanh context lớn)
-        
+
         if (recentLogs.length > 0) {
           // Format cho Groq messages array
           chatHistory = recentLogs.reverse().map(log => ({
@@ -70,8 +70,8 @@ router.post('/', optionalAuth, async (req, res) => {
     // 2. Xử lý ngữ cảnh hành trình & vị trí
     let tripContext = "Khách đang khám phá tự do.";
     if (itinerary && itinerary.length > 0) {
-       const stops = itinerary.map(s => s.name || s).join(' -> ');
-       tripContext = `Khách đang đi theo chuyến: "${activeTrip || 'Hành trình thông minh'}". Lộ trình dự kiến: ${stops}.`;
+      const stops = itinerary.map(s => s.name || s).join(' -> ');
+      tripContext = `Khách đang đi theo chuyến: "${activeTrip || 'Hành trình thông minh'}". Lộ trình dự kiến: ${stops}.`;
     }
 
     let locationContext = "Chưa xác định rõ vị trí GPS.";
@@ -82,10 +82,10 @@ router.post('/', optionalAuth, async (req, res) => {
         const placesData = eval(extractJson);
         const nearest = placesData.find(p => {
           const d = Math.sqrt(Math.pow(p.lat - coords.lat, 2) + Math.pow(p.lng - coords.lng, 2));
-          return d < 0.5; 
+          return d < 0.5;
         });
         if (nearest) locationContext = `Vị trí hiện tại: ${nearest.name} (${nearest.region}). Đặc tả: ${nearest.text}.`;
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // --- START SMART CACHE (TRÍ NHỚ PHẢN XẠ) ---
@@ -94,18 +94,18 @@ router.post('/', optionalAuth, async (req, res) => {
       try {
         // A. Ưu tiên tìm trong bảng Knowledge (Kiến thức Admin soạn)
         const knowledgeMatch = await Knowledge.findOne({
-           $or: [
-             { question: lowerMsg },
-             { question: message.trim() }
-           ]
+          $or: [
+            { question: lowerMsg },
+            { question: message.trim() }
+          ]
         });
 
         if (knowledgeMatch) {
           console.log("➡️ [SmartCache] Khớp kiến thức Admin:", knowledgeMatch.question);
-          return res.json({ 
-            success: true, 
-            answer: knowledgeMatch.answer, 
-            source: 'smart-cache-knowledge' 
+          return res.json({
+            success: true,
+            answer: knowledgeMatch.answer,
+            source: 'smart-cache-knowledge'
           });
         }
 
@@ -116,8 +116,8 @@ router.post('/', optionalAuth, async (req, res) => {
 
         if (!isContextSensitive && lowerMsg.length > 10) {
           // Tìm câu trả lời gần nhất cho câu hỏi y hệt này
-          const prevQuestion = await Conversation.findOne({ 
-            role: 'user', 
+          const prevQuestion = await Conversation.findOne({
+            role: 'user',
             text: { $regex: new RegExp(`^${message.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
           }).sort({ timestamp: -1 });
 
@@ -130,10 +130,10 @@ router.post('/', optionalAuth, async (req, res) => {
 
             if (prevAnswer && prevAnswer.text) {
               console.log("➡️ [SmartCache] Khớp lịch sử cộng đồng:", message);
-              return res.json({ 
-                success: true, 
-                answer: prevAnswer.text, 
-                source: 'smart-cache-history' 
+              return res.json({
+                success: true,
+                answer: prevAnswer.text,
+                source: 'smart-cache-history'
               });
             }
           }
@@ -205,7 +205,7 @@ NGỮ CẢNH THỜI GIAN THỰC:
     } catch (groqError) {
       console.error('❌ Groq API Error Detail:', groqError);
       if (groqError.response && groqError.response.data) {
-          console.error('Groq Response Data:', JSON.stringify(groqError.response.data));
+        console.error('Groq Response Data:', JSON.stringify(groqError.response.data));
       }
       res.status(500).json({ success: false, answer: "Bộ não AI siêu tốc đang bảo trì, vui lòng thử lại sau!" });
     }
