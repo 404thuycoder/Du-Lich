@@ -99,11 +99,12 @@ Trước khi trả về JSON, hãy tự kiểm tra:
 ✓ Nếu khách muốn săn mây, ngày đó có bắt đầu lúc 04:00–04:30 không?
 ✓ ĐỊA PHƯƠNG HÓA: Nếu đi từ Hà Nội, dùng bến xe Mỹ Đình/Giáp Bát. Nếu đi từ Sài Gòn, dùng bến xe Miền Đông/Miền Tây. KHÔNG RÂU ÔNG NỌ CẮM CẰM BÀ KIA.
 ✓ THỰC TẾ DI CHUYỂN: Hà Nội - Bắc Giang/Bắc Ninh/Hải Dương chỉ mất 1-1.5 tiếng. Không được ghi 6 tiếng.
-✓ TÍNH TOÁN CHI PHÍ (QUY TẮC SỐ 1): Tổng chi phí (estimatedCost) PHẢI TRÙNG KHỚP với ngân sách ${req.body.exactBudget || budget}. 
-  - Nếu ngân sách thấp (VD: 500k), TUYỆT ĐỐI KHÔNG được để estimatedCost vọt lên 900k. Điều này là thất bại hoàn toàn.
-  - Bạn PHẢI hy sinh các dịch vụ tốn phí: đi bộ thay vì taxi, ăn bánh mì/xôi thay vì nhà hàng, tham quan công viên/hồ thay vì khu du lịch mất vé.
+- TÍNH TOÁN CHI PHÍ (QUY TẮC TỐI THƯỢNG): 
+  - TỔNG CHI PHÍ (estimatedCost) = (Giá khách sạn * số đêm) + (Tổng cost của TẤT CẢ hoạt động).
+  - estimatedCost PHẢI ≤ ${req.body.exactBudget || budget}. KHÔNG ĐƯỢC VƯỢT QUÁ DÙ CHỈ 1 ĐỒNG nếu ngân sách có con số cụ thể (VD: 500k).
+  - Nếu ngân sách thấp (Dưới 1 triệu): TUYỆT ĐỐI KHÔNG đề xuất khách sạn đắt tiền. Nếu không đủ tiền thuê phòng, hãy ghi "Không cần khách sạn/Ở nhà" và đặt giá là 0đ.
   - Phải trừ hao chi phí dự phòng 10-15% trong tổng tính toán.
-  - Mọi hoạt động trong itinerary PHẢI có giá tiền (cost) thực tế và tổng của chúng + khách sạn phải khớp với estimatedCost.
+  - Mọi hoạt động trong itinerary PHẢI có giá tiền (cost) thực tế.
 
 === FORMAT JSON ĐẦU RA ===
 Chỉ trả về JSON hợp lệ, không có text khác:
@@ -131,11 +132,23 @@ LƯU Ý QUAN TRỌNG NHẤT (PHẢI TUÂN THỦ TUYỆT ĐỐI):
 - CHI PHÍ: Ngân sách là ${budget}. Tổng giá trị (estimatedCost) của khách sạn và tất cả hoạt động PHẢI XẤP XỈ con số này (Sai số tối đa 10%). 
 - CHẤT LƯỢNG: Nếu ngân sách cao, hãy chọn khách sạn đắt nhất và ăn uống sang trọng nhất có thể để tiêu hết tiền của khách.
 - ĐỊA LÝ: Đảm bảo địa điểm (location) chính xác với tỉnh/thành phố ${destination}.
-${req.body.isShortTerm ? `
-=== QUY TẮC RIÊNG CHO HOẠT ĐỘNG NGẮN ===
-1. Không cần chia ngày. Chỉ cần 1-3 hoạt động tập trung vào mục tiêu chính (VD: đi ăn bánh mì thì giới thiệu quán ngon nhất + 1 chỗ ngồi uống nước gần đó).
-2. PHẢI có địa chỉ cực kỳ cụ thể (Số nhà, tên đường).
-3. TripSummary phải thân thiện như một người bạn địa phương giới thiệu.` : ''}`;
+${req.body.isShortTerm || numDays <= 1 ? `
+=== QUY TẮC RIÊNG CHO HOẠT ĐỘNG NGẮN / CHUYẾN ĐI 1 NGÀY ===
+1. Vì đây là chuyến đi ngắn hoặc đi chơi trong ngày (${req.body.outingTime || 'vài tiếng'}), TUYỆT ĐỐI KHÔNG gợi ý khách sạn. Hãy để "accommodationSuggestion" là null hoặc ghi "Không cần lưu trú".
+2. Không cần chia ngày. Chỉ cần tập trung vào các hoạt động liên tục trong khoảng thời gian khách yêu cầu.
+3. PHẢI có địa chỉ cực kỳ cụ thể (Số nhà, tên đường).
+4. TripSummary phải thân thiện như một người bạn địa phương giới thiệu.
+` : `
+=== QUY TẮC LƯU TRÚ (CHO CHUYẾN ĐI QUA ĐÊM) ===
+- Tên khách sạn và giá tiền PHẢI THỰC TẾ. 
+- Nếu ngân sách thấp (VD: 500k cho cả chuyến đi), BẮT BUỘC chọn Nhà nghỉ/Hostel giá 100k-150k hoặc SKIP luôn nếu không đủ.
+- KHÔNG ĐƯỢC đề xuất khách sạn Metropole (4-5 triệu) cho người có ngân sách 500k. Đây là lỗi logic cực nặng.
+=== CHÍNH SÁCH NGÂN SÁCH (BẮT BUỘC) ===
+1. Nếu khách chọn ngân sách cụ thể (VD: 500k), bạn KHÔNG ĐƯỢC PHÉP gợi ý bất kỳ dịch vụ nào vượt quá con số này.
+2. Nếu ngân sách không đủ cho khách sạn cao cấp, hãy chọn khách sạn bình dân hoặc không gợi ý. 
+3. TUYỆT ĐỐI KHÔNG ĐƯỢC CHỌN Metropole, Intercontinental, hay Resort cho ngân sách dưới 5 triệu VNĐ.
+4. Nếu đây là đi chơi ngắn (isShortTerm=true), đặt giá khách sạn = 0 và skip suggestion.
+`}`;
 
     const response = await groq.chat.completions.create({
       model: 'llama-3.3-70b-versatile',
@@ -300,7 +313,7 @@ router.post('/discover', async (req, res) => {
           "finalSelection": "Tên địa danh",
           "suggestedBudget": "Không quan tâm hạn mức", // Mặc định nếu khách không nhắc tiền. Hoặc chọn mức phù hợp: "dưới 1 triệu VNĐ", "1 đến 3 triệu VNĐ", "3 đến 7 triệu VNĐ", "7 đến 15 triệu VNĐ", "trên 15 triệu VNĐ"
           "exactBudget": "500.000 VNĐ",
-          "isShortTerm": true, // true nếu là đi ăn, đi chơi ngắn trong vài tiếng hoặc trong ngày, false nếu là đi du lịch nhiều ngày
+          "isShortTerm": true, // true nếu là đi ăn, đi chơi ngắn trong vài tiếng hoặc trong ngày (bao gồm cả đi chơi đêm rồi về), false nếu là đi du lịch cần thuê chỗ ngủ qua đêm
           "outingTime": "21:00" // Giờ đi nếu khách nhắc tới
         }`
       }

@@ -598,9 +598,14 @@ function calculateNav() {
           document.getElementById('integrated-icon').textContent = iconStr;
         }
 
-        if (stepDist < 50 && State.lastSpokenStep !== nextStep.maneuver.location[0]) {
-          State.lastSpokenStep = nextStep.maneuver.location[0];
-          speakMsg(`Sắp tới, ${modifierStr} ${roadName}`);
+        if (stepDist < 70 && State.lastSpokenStep !== nextStep.maneuver.location[0]) {
+          // Chỉ nói nếu cách lần nói trước ít nhất 10 giây
+          const now = Date.now();
+          if (!State.lastTbtTime || (now - State.lastTbtTime > 10000)) {
+            State.lastSpokenStep = nextStep.maneuver.location[0];
+            State.lastTbtTime = now;
+            speakMsg(`Sắp tới, ${modifierStr} ${roadName}`);
+          }
         }
       }
     }
@@ -822,8 +827,8 @@ function _startCurrentWaypoint() {
         case 7:
           if (data && data.length > 0) {
             setTarget(parseFloat(data[0].lat), parseFloat(data[0].lon));
-            // Thông báo ngắn gọn, không yêu cầu bấm thêm
-            speakMsg("\u0110\xE3 t\xECm th\u1EA5y ".concat(query, ". Ch\u1ECDn ph\u01B0\u01A1ng ti\u1EC7n v\xE0 nh\u1EA5n B\u1EAFt \u0110\u1EA7u."));
+            // Thông báo ngắn gọn, hài hòa
+            speakMsg("\u0110\xE3 t\xECm th\u1EA5y ".concat(query));
             els.statusText.textContent = "\u2705 T\xECm th\u1EA5y: ".concat(query);
             els.statusText.className = "status-msg success";
           } else {
@@ -1520,11 +1525,17 @@ function exitNavigation() {
   els.pauseBtn.disabled = true;
   
   els.statusText.textContent = "Đã thoát dẫn đường.";
-  if (window.speakMsg) speakMsg("Đã thoát dẫn đường.");
+  if (window.voiceGuide) {
+    window.voiceGuide.cancel();
+  }
 }
 
 // =================== INIT APP ===================
 document.addEventListener('DOMContentLoaded', function () {
+  window.addEventListener('beforeunload', function() {
+    if (window.voiceGuide) window.voiceGuide.cancel();
+  });
+
   initMap();
   initCompass();
   startGPS();
@@ -1587,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', function () {
       State.voiceEnabled = !State.voiceEnabled;
       if (els.voiceIcon) els.voiceIcon.textContent = State.voiceEnabled ? '🔊' : '🔇';
       if (State.voiceEnabled) speakMsg("Đã bật trợ lý giọng nói");
-      else window.speechSynthesis.cancel();
+      else if (window.voiceGuide) window.voiceGuide.cancel();
     });
   }
 

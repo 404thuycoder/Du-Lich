@@ -23,6 +23,9 @@ var VoiceGuide = /*#__PURE__*/function () {
     this._fab = null;
     this.onResultCallback = null;
     this.onStatusChange = null;
+    this.lastSpoken = "";
+    this.lastSpokenTime = 0;
+    this.globalSpeakCooldown = 0; // Thời gian giữa các câu nói bất kỳ
     this.init();
   }
   return _createClass(VoiceGuide, [{
@@ -149,6 +152,20 @@ var VoiceGuide = /*#__PURE__*/function () {
       this.setStatus('idle');
     }
   }, {
+    key: "cancel",
+    value: function cancel() {
+      if (this.synth) this.synth.cancel();
+      if (this.recognition) {
+        try {
+          this.recognition.abort();
+        } catch (e) {}
+      }
+      this.isListening = false;
+      this.companionMode = false;
+      this.setStatus('idle');
+      console.log("🔊 VoiceGuide: Cancelled all speech and recognition.");
+    }
+  }, {
     key: "setCompanionMode",
     value: function setCompanionMode(active) {
       this.companionMode = active;
@@ -177,8 +194,27 @@ var VoiceGuide = /*#__PURE__*/function () {
   }, {
     key: "speak",
     value: function speak(text) {
-      var _this2 = this;
       if (!text) return;
+      
+      var now = Date.now();
+      
+      // 1. Chặn lặp lại câu cũ trong vòng 15 giây (tăng lên để tránh lặp lại phiền phức)
+      if (text === this.lastSpoken && (now - this.lastSpokenTime < 15000)) {
+        console.warn("🔊 VoiceGuide: Chặn lặp lại câu:", text);
+        return;
+      }
+
+      // 2. Chặn nói quá nhanh (khoảng cách giữa các câu bất kỳ tối thiểu 3 giây để tạo cảm giác hài hòa)
+      if (now - this.globalSpeakCooldown < 3000) {
+        console.warn("🔊 VoiceGuide: Chặn nói quá nhanh để giữ sự hài hòa.");
+        return;
+      }
+
+      this.lastSpoken = text;
+      this.lastSpokenTime = now;
+      this.globalSpeakCooldown = now;
+
+      if (this.synth.speaking) this.synth.cancel(); // Ngắt câu cũ để ưu tiên câu mới
       this.stop(); // Tắt mic khi nói để tránh Echo
       this.setStatus('speaking');
       var utterance = new SpeechSynthesisUtterance(text);
