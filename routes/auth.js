@@ -142,9 +142,8 @@ router.post('/business/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     const normalizedEmail = String(email || '').toLowerCase();
-    let account = await BusinessAccount.findOne({ email: normalizedEmail });
-    if (account) return res.status(400).json({ success: false, message: 'Email doanh nghiệp đã tồn tại' });
-    account = new BusinessAccount({
+    // Bỏ check trùng lặp để 1 email tạo nhiều tài khoản
+    let account = new BusinessAccount({
       name,
       displayName: name,
       email: normalizedEmail,
@@ -162,12 +161,21 @@ router.post('/business/register', async (req, res) => {
 router.post('/business/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const account = await BusinessAccount.findOne({ email: String(email || '').toLowerCase() });
-    if (!account) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
-    const isMatch = await bcrypt.compare(password, account.password);
-    if (!isMatch) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
-    const token = signPortalToken(account, 'business', 'business');
-    res.json({ success: true, token, user: { id: account.id, email: account.email, name: account.name, role: 'business', status: account.status, avatar: account.avatar } });
+    const accounts = await BusinessAccount.find({ email: String(email || '').toLowerCase() });
+    if (!accounts || accounts.length === 0) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
+    
+    let matchedAccount = null;
+    for (const acc of accounts) {
+      const isMatch = await bcrypt.compare(password, acc.password);
+      if (isMatch) {
+        matchedAccount = acc;
+        break;
+      }
+    }
+    
+    if (!matchedAccount) return res.status(400).json({ success: false, message: 'Email hoặc mật khẩu không đúng' });
+    const token = signPortalToken(matchedAccount, 'business', 'business');
+    res.json({ success: true, token, user: { id: matchedAccount.id, email: matchedAccount.email, name: matchedAccount.name, role: 'business', status: matchedAccount.status, avatar: matchedAccount.avatar } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

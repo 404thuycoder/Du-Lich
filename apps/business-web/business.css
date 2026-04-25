@@ -268,3 +268,15 @@ body.business-body {
   .biz-quick-actions { grid-template-columns: 1fr; }
 }
 
+/* Dot Typing Animation */
+.dot-typing::after {
+  content: '';
+  animation: dotTyping 1.5s infinite steps(4, end);
+}
+
+@keyframes dotTyping {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}

@@ -89,7 +89,7 @@ router.get('/logs', adminTokenAuth, adminAuth, async (req, res) => {
   }
 });
 
-// Lấy danh sách tất cả người dùng (cả hai cấp đều xem được)
+// Lấy danh sách tất cả người dùng + doanh nghiệp (cả hai cấp đều xem được)
 router.get('/users', adminTokenAuth, adminAuth, async (req, res) => {
   try {
     const users = await User.find().select('-password').lean();
@@ -99,7 +99,20 @@ router.get('/users', adminTokenAuth, adminAuth, async (req, res) => {
       isAdmin: u.role === 'admin' || u.role === 'superadmin',
       isBusiness: u.role === 'business'
     }));
-    res.json({ success: true, data: normalizedUsers });
+
+    // Gộp thêm tài khoản doanh nghiệp từ BusinessAccount collection
+    const bizAccounts = await BusinessAccount.find().select('-password').lean();
+    const normalizedBiz = bizAccounts.map((b) => ({
+      ...b,
+      role: 'business',
+      isSuperAdmin: false,
+      isAdmin: false,
+      isBusiness: true,
+      _source: 'BusinessAccount' // Đánh dấu nguồn để phân biệt
+    }));
+
+    const allUsers = [...normalizedUsers, ...normalizedBiz];
+    res.json({ success: true, data: allUsers });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
