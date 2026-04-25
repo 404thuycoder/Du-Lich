@@ -74,7 +74,8 @@
     profile: "wander_profile",
     trips: "wander_trips",
     wishlist: "wander_wishlist",
-    tripDraft: "wander_trip_draft"
+    tripDraft: "wander_trip_draft",
+    searchHistory: "wander_search_history"
   };
   function loadJSON(key, fallback) {
     try {
@@ -164,125 +165,8 @@
     }
   }
   function refreshAuthUI() {
-    var token = localStorage.getItem("wander_token");
-    var authBtns = document.querySelectorAll("[data-auth-hide]");
-    var profileTrays = document.querySelectorAll("[data-auth-show]");
-    var workspaceLinks = document.querySelectorAll("[data-role-workspace]");
-    var partnerLinks = document.querySelectorAll("[data-role-partner-only]");
-
-    // UI Elements for user info
-    var userAvatarImg = document.querySelector("[data-user-avatar]");
-    var userInitial = document.querySelector("[data-user-initial]");
-    var userNameEl = document.querySelector("[data-user-name]");
-    if (token) {
-      // === PORTAL GUARD: Strictly Enforce User Portal ===
-      try {
-        var base64Check = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        var paddingCheck = '='.repeat((4 - base64Check.length % 4) % 4);
-        var payloadCheck = JSON.parse(atob(base64Check + paddingCheck));
-        var roleCheck = ((payloadCheck.user || {}).role || "").toLowerCase();
-        
-        // This portal is ONLY for travelers. If a token from another role leaked in, remove it.
-        if (roleCheck !== 'user' && roleCheck !== 'traveler') {
-          localStorage.removeItem("wander_token");
-          // Proceed as logged out
-          authBtns.forEach(function (el) { el.style.display = "flex"; });
-          profileTrays.forEach(function (el) { el.style.display = "none"; });
-          return;
-        }
-      } catch (e) {
-        localStorage.removeItem("wander_token");
-        authBtns.forEach(function (el) { el.style.display = "flex"; });
-        profileTrays.forEach(function (el) { el.style.display = "none"; });
-        return;
-      }
-
-      // User is logged in - Hide auth buttons, show profile
-      authBtns.forEach(function (el) {
-        el.style.display = "none";
-      });
-      profileTrays.forEach(function (el) {
-        el.style.display = "flex";
-        el.removeAttribute('hidden');
-        el.classList.remove('hidden');
-      });
-
-      // Update specific user details
-      try {
-        var base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        var padding = '='.repeat((4 - base64.length % 4) % 4);
-        var payload = JSON.parse(atob(base64 + padding));
-        var u = payload.user || {};
-        var role = (u.role || "").toLowerCase();
-        var status = u.status || 'active';
-        var isAdmin = role === 'admin' || role === 'superadmin';
-        var isBusiness = role === 'business';
-
-        // Route Guard for business.html
-        if (window.location.pathname.endsWith('business.html')) {
-          if (!isBusiness) {
-            window.location.href = '/';
-            return;
-          }
-          if (status === 'pending') {
-            if (window.WanderUI) WanderUI.showToast("Tài khoản đang chờ duyệt, bạn chưa thể truy cập Kênh Đối tác.", "warning");
-            window.location.href = '/';
-            return;
-          }
-        }
-
-        // Update Name and Avatar
-        var dis = u.name || u.email || "User";
-        if (userNameEl) {
-          userNameEl.innerHTML = dis.replace(/</g, '&lt;') + '<span>' + (u.email || "").replace(/</g, '&lt;') + '</span>';
-        }
-        if (userAvatarImg && u.avatar) {
-          userAvatarImg.src = u.avatar;
-          userAvatarImg.style.display = 'block';
-          userAvatarImg.removeAttribute('hidden');
-          if (userInitial) userInitial.style.display = 'none';
-        } else {
-          if (userAvatarImg) userAvatarImg.style.display = 'none';
-          if (userInitial) {
-            userInitial.textContent = dis.charAt(0).toUpperCase();
-            userInitial.style.display = 'block';
-          }
-        }
-
-        // Workspace link
-        workspaceLinks.forEach(function (el) {
-          if (isBusiness) {
-            el.style.display = "flex";
-            el.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Kênh Đối tác';
-            el.href = 'http://localhost:3002';
-          } else {
-            el.style.display = "none";
-          }
-        });
-
-        // AI Assistant Link (Strictly for travelers)
-        document.querySelectorAll("[data-traveler-only]").forEach(function (el) {
-          el.style.display = isAdmin || isBusiness ? "none" : "flex";
-        });
-        partnerLinks.forEach(function (el) {
-          el.style.display = isAdmin || isBusiness ? "none" : "flex";
-        });
-      } catch (e) {
-        console.error("Bad token decoding in UI refresh", e);
-      }
-    } else {
-      // Logged out
-      authBtns.forEach(function (el) {
-        el.style.display = "flex";
-      });
-      profileTrays.forEach(function (el) {
-        el.style.display = "none";
-      });
-    }
-
-    // Trigger notification badge update if possible
-    if (window.WanderUI && window.WanderUI.updateNotificationBadge) {
-      window.WanderUI.updateNotificationBadge();
+    if (window.WanderUI && WanderUI.syncAuthUI) {
+      WanderUI.syncAuthUI();
     }
   }
   function syncRoleFromToken() {
@@ -293,8 +177,8 @@
       if (parts.length !== 3) throw new Error('invalid token');
       var base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
       var padding = '='.repeat((4 - base64.length % 4) % 4);
-      var payload = JSON.parse(atob(base64 + padding));
-      var u = payload.user || {};
+      var payload = JSON.parse(decodeURIComponent(escape(atob(base64 + padding))));
+      var u = payload.user || payload.account || payload;
       var sess = getSession();
       if (!sess || !sess.email) return;
       var existing = getProfile() || {};
@@ -526,14 +410,21 @@
     });
   });
   if (backdrop) backdrop.addEventListener("click", closeModals);
-  document.querySelectorAll("[data-modal]").forEach(function (modalEl) {
-    modalEl.addEventListener("click", function (e) {
-      if (e.target === modalEl) closeModals();
-    });
-  });
-  var authOpenBtn = document.querySelector("[data-auth-open]");
-  if (authOpenBtn) authOpenBtn.addEventListener("click", function () {
-    openModal("auth");
+  // Dùng event delegation để hỗ trợ các phần tử được thêm động (như trong Leaderboard)
+  document.addEventListener("click", function(e) {
+    var authBtn = e.target.closest("[data-auth-open]");
+    if (authBtn) {
+      e.preventDefault();
+      openModal("auth");
+      return;
+    }
+    
+    var modalTrigger = e.target.closest("[data-modal-open]");
+    if (modalTrigger) {
+      e.preventDefault();
+      var name = modalTrigger.getAttribute("data-modal-open");
+      openModal(name);
+    }
   });
 
   /* Auth tabs */
@@ -937,8 +828,7 @@
         };
         var token = localStorage.getItem('wander_token');
         if (token) {
-          // Gửi lên server (không gửi base64 lớn, chỉ gửi metadata text)
-          fetch('/api/auth/profile', {
+        fetch('/api/auth/profile', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -950,15 +840,25 @@
               phone: newProf.phone,
               avatar: newProf.avatar
             })
-          }).catch(function () {});
+          }).then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.success) {
+              if (window.WanderUI) WanderUI.showToast("Đã cập nhật hồ sơ thành công!", "success");
+            } else {
+              if (window.WanderUI) WanderUI.showToast("Có lỗi khi lưu hồ sơ.", "error");
+            }
+            refreshAuthUI();
+          })
+          .catch(function () {
+            if (window.WanderUI) WanderUI.showToast("Lỗi kết nối máy chủ.", "error");
+          });
         }
         saveProfileForUser(sess.email, Object.assign({}, existing, newProf));
         var st = profileForm.querySelector("[data-profile-status]");
         if (st) {
           st.textContent = "✔ Đã lưu hồ sơ.";
-          st.style.color = 'var(--accent)';
+          st.style.color = '#4ade80';
         }
-        refreshAuthUI();
         window.setTimeout(function () {
           if (st) {
             st.textContent = "";
@@ -1087,6 +987,12 @@
         hint.textContent = "Đã cập nhật tiêu chí — danh sách bên dưới, trang chủ cá nhân hóa đã làm mới.";
       }
       renderPersonalSection();
+      // Track quest activity: Tìm kiếm (Smart)
+      try {
+        var qa = JSON.parse(localStorage.getItem('wv_quest_activity') || '{}');
+        qa.dailySearch = (qa.dailySearch || 0) + 1;
+        localStorage.setItem('wv_quest_activity', JSON.stringify(qa));
+      } catch(e) {}
     });
   }
   var savePrefsBtn = document.querySelector("[data-save-prefs]");
@@ -1265,6 +1171,12 @@
         behavior: "smooth"
       });
       applyDestFilters();
+      // Track quest activity: Tìm kiếm (General)
+      try {
+        var qa = JSON.parse(localStorage.getItem('wv_quest_activity') || '{}');
+        qa.dailySearch = (qa.dailySearch || 0) + 1;
+        localStorage.setItem('wv_quest_activity', JSON.stringify(qa));
+      } catch(e) {}
     });
   }
   chipBtns.forEach(function (chip) {
@@ -1286,6 +1198,21 @@
       applyDestFilters();
     });
   });
+
+  // Tracking for Promo Offers
+  try {
+    var promoBtns = document.querySelectorAll('#offers .btn');
+    promoBtns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        try {
+          var qa = JSON.parse(localStorage.getItem('wv_quest_activity') || '{}');
+          qa.expOffers = 1;
+          localStorage.setItem('wv_quest_activity', JSON.stringify(qa));
+        } catch(e) {}
+      });
+    });
+  } catch(e) {}
+
   window._poiCache = {};
   function fetchWithTimeout(url, timeout) {
     var controller = new AbortController();
@@ -1325,12 +1252,7 @@
     }
     return tryMirror(0);
   }
-  var layers = {
-    playing: L.layerGroup(),
-    eating: L.layerGroup(),
-    sleeping: L.layerGroup(),
-    attraction: L.layerGroup()
-  };
+  // Individual map instances will manage their own layers locally to avoid global dependency issues.
   function getPOICategory(item) {
     if (item.tags.amenity === 'restaurant' || item.tags.amenity === 'cafe' || item.tags.amenity === 'bar' || item.tags.amenity === 'pub') return 'eating';
     if (item.tags.tourism === 'hotel' || item.tags.tourism === 'hostel' || item.tags.tourism === 'guest_house' || item.tags.tourism === 'resort') return 'sleeping';
@@ -2381,6 +2303,13 @@
           statusEl.classList.add("is-success");
           form.reset();
           updateContactPrefill();
+          // Track quest activity: Liên hệ & Đánh giá
+          try {
+            var qa = JSON.parse(localStorage.getItem('wv_quest_activity') || '{}');
+            qa.expContact = 1;
+            qa.reviewWrite = (qa.reviewWrite || 0) + 1;
+            localStorage.setItem('wv_quest_activity', JSON.stringify(qa));
+          } catch(e) {}
         } else {
           statusEl.textContent = "✖ Lỗi: " + (json.message || "Không thể gửi phản hồi.");
           statusEl.classList.add("is-error");
@@ -2398,29 +2327,35 @@
     });
   }
 
-  /* ——— Chatbot (logic gọi qua API Server Node) ——— */
+  /* ——— Chatbot (Hỗ trợ Đa phiên & Lịch sử) ——— */
+  var currentSessionId = null;
+  var chatPanel = document.querySelector("[data-chat-panel]");
+  var chatToggleBtns = document.querySelectorAll("[data-chat-toggle]");
+  var chatLog = document.querySelector("[data-chat-log]");
+  var chatForm = document.querySelector("[data-chat-form]");
+  var chatInput = document.querySelector("[data-chat-input]");
+  
+  // History Sidebar Elements
+  var historyView = document.querySelector("[data-chat-sessions-view]");
+  var historyList = document.querySelector("[data-chat-sessions-list]");
+  var historyToggleBtn = document.querySelector("[data-chat-history-btn]");
+  var historyCloseBtn = document.querySelector("[data-chat-history-close]");
+  var newChatBtn = document.querySelector("[data-chat-new-btn]");
+
   function botReply(userText) {
     if (typeof window.wanderChatReply === "function") {
       return window.wanderChatReply(userText, {
         places: PLACES,
         getPrefs: getPrefs,
         userPos: userPos || null,
-        itinerary: stopList || []
-      }).then(function (reply) {
-        return reply;
+        itinerary: stopList || [],
+        sessionId: currentSessionId,
+        lang: localStorage.getItem('wander_chat_lang') || 'auto'
       });
     }
-    var t = normalize(userText);
-    if (!t.trim()) {
-      return Promise.resolve("Nhập câu hỏi về điểm đến, mùa đi, hoặc tên địa phương.");
-    }
-    return Promise.resolve("Trợ lý kết nối máy chủ đang bị gián đoạn.");
+    return Promise.resolve({ success: false, answer: "Trợ lý kết nối máy chủ đang bị gián đoạn." });
   }
-  var chatPanel = document.querySelector("[data-chat-panel]");
-  var chatToggleBtns = document.querySelectorAll("[data-chat-toggle]");
-  var chatLog = document.querySelector("[data-chat-log]");
-  var chatForm = document.querySelector("[data-chat-form]");
-  var chatInput = document.querySelector("[data-chat-input]");
+
   function appendChat(kind, text) {
     if (!chatLog) return;
     var b = document.createElement("div");
@@ -2429,6 +2364,200 @@
     chatLog.appendChild(b);
     chatLog.scrollTop = chatLog.scrollHeight;
   }
+
+  function loadChatHistory(sid) {
+    var token = localStorage.getItem('wander_token') || localStorage.getItem('wander_admin_token');
+    chatLog.innerHTML = '<div style="text-align:center;padding:1rem;font-size:0.8rem;color:var(--text-muted);">Đang tải hội thoại...</div>';
+    currentSessionId = sid;
+    
+    if (historyView) {
+      historyView.classList.remove('is-active');
+      setTimeout(function() { historyView.hidden = true; }, 300);
+    }
+
+    fetch("/api/chat/history/" + sid, {
+      headers: { 'x-auth-token': token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      chatLog.innerHTML = '';
+      if (json.success && json.messages) {
+        json.messages.forEach(function(m) {
+          appendChat(m.role === 'user' ? 'user' : 'bot', m.text);
+        });
+      } else {
+        appendChat('bot', 'Không thể tải lịch sử đoạn chat này.');
+      }
+    })
+    .catch(function() {
+      chatLog.innerHTML = '';
+      appendChat('bot', 'Lỗi kết nối khi tải lịch sử.');
+    });
+  }
+
+  function loadChatSessions() {
+    var token = localStorage.getItem('wander_token') || localStorage.getItem('wander_admin_token');
+    if (!token) {
+      if (historyList) historyList.innerHTML = '<div class="chat-sessions-loading">Vui lòng đăng nhập để xem lịch sử.</div>';
+      return;
+    }
+    if (historyList) historyList.innerHTML = '<div class="chat-sessions-loading">Đang tải...</div>';
+    
+    fetch("/api/chat/sessions", {
+      headers: { 'x-auth-token': token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      if (json.success && json.sessions && json.sessions.length > 0) {
+        historyList.innerHTML = '';
+        json.sessions.forEach(function(s) {
+          var item = document.createElement('div');
+          item.className = 'chat-session-item';
+          var dateStr = new Date(s.updatedAt).toLocaleDateString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+          item.innerHTML = '<div class="chat-session-item__info">' +
+                             '<div class="chat-session-item__title">' + escapeHtml(s.title || 'Hội thoại du lịch') + '</div>' +
+                             '<div class="chat-session-item__date">' + dateStr + '</div>' +
+                           '</div>' +
+                           '<button type="button" class="btn-delete-session" title="Xóa">🗑️</button>';
+          
+          item.onclick = function() { loadChatHistory(s.sessionId); };
+          
+          var delBtn = item.querySelector('.btn-delete-session');
+          delBtn.onclick = function(e) {
+            e.stopPropagation();
+            if (confirm('Xóa vĩnh viễn đoạn hội thoại này?')) {
+              fetch('/api/chat/session/' + s.sessionId, {
+                method: 'DELETE',
+                headers: { 'x-auth-token': token }
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(res) {
+                if (res.success) {
+                  item.remove();
+                  if (currentSessionId === s.sessionId) {
+                    currentSessionId = null;
+                    chatLog.innerHTML = '';
+                    appendChat('bot', 'Hội thoại đã bị xóa.');
+                  }
+                }
+              });
+            }
+          };
+
+          historyList.appendChild(item);
+        });
+      } else {
+        historyList.innerHTML = '<div class="chat-sessions-loading">Chưa có hội thoại nào.</div>';
+      }
+    })
+    .catch(function() {
+      if (historyList) historyList.innerHTML = '<div class="chat-sessions-loading">Lỗi tải lịch sử.</div>';
+    });
+  }
+
+  if (historyToggleBtn) {
+    historyToggleBtn.onclick = function() {
+      if (historyView) {
+        historyView.hidden = false;
+        setTimeout(function() { historyView.classList.add('is-active'); }, 10);
+        loadChatSessions();
+      }
+    };
+    // Đóng khi click vào vùng trống (background)
+    if (historyView) {
+      historyView.onclick = function(e) {
+        if (e.target === historyView) {
+          historyView.classList.remove('is-active');
+          setTimeout(function() { historyView.hidden = true; }, 300);
+        }
+      };
+    }
+  }
+  if (historyCloseBtn) {
+    historyCloseBtn.onclick = function() {
+      if (historyView) {
+        historyView.classList.remove('is-active');
+        setTimeout(function() { historyView.hidden = true; }, 300);
+      }
+    };
+  }
+
+  // --- Language Switcher Logic (Improved for multiple instances) ---
+  function initLangSwitchers() {
+    var switchers = document.querySelectorAll('.chat-lang-switcher');
+    var savedLang = localStorage.getItem('wander_chat_lang') || 'auto';
+    
+    switchers.forEach(function(switcher) {
+      var btn = switcher.querySelector('.chat-lang-btn');
+      var dropdown = switcher.querySelector('.chat-lang-dropdown');
+      var codeSpan = switcher.querySelector('.current-lang-code');
+
+      if (codeSpan) codeSpan.textContent = savedLang.toUpperCase();
+
+      if (btn && dropdown) {
+        btn.onclick = function(e) {
+          e.stopPropagation();
+          // Đóng các dropdown khác trước
+          document.querySelectorAll('.chat-lang-dropdown').forEach(function(d) {
+            if (d !== dropdown) d.classList.remove('is-active');
+          });
+          dropdown.classList.toggle('is-active');
+        };
+
+        dropdown.querySelectorAll('button').forEach(function(lBtn) {
+          lBtn.onclick = function() {
+            var lang = this.getAttribute('data-lang');
+            localStorage.setItem('wander_chat_lang', lang);
+            
+            // Cập nhật tất cả các code span trên trang
+            document.querySelectorAll('.current-lang-code').forEach(function(span) {
+              span.textContent = lang.toUpperCase();
+            });
+            
+            // Cập nhật Placeholder
+            var placeholders = {
+              'auto': 'Hỏi về du lịch Việt Nam…',
+              'vi': 'Hỏi về du lịch Việt Nam…',
+              'en': 'Ask about Vietnam tourism…',
+              'jp': 'ベトナム観光について聞く…',
+              'kr': '베트남 관광에 대해 hỏi…',
+              'fr': 'Posez des questions sur le tourisme au Vietnam…'
+            };
+            if (chatInput) chatInput.placeholder = placeholders[lang] || placeholders['vi'];
+
+            dropdown.classList.remove('is-active');
+            
+            var confirmMsg = {
+              'auto': 'Đã chuyển sang tự nhận diện ngôn ngữ.',
+              'vi': 'Đã chuyển sang Tiếng Việt.',
+              'en': 'Switched to English.',
+              'jp': '日本語に切り替えました。',
+              'kr': '한국어로 전환되었습니다.',
+              'fr': 'Passé en français.'
+            };
+            appendChat('bot', confirmMsg[lang] || confirmMsg['vi']);
+          };
+        });
+      }
+    });
+
+    document.addEventListener('click', function() {
+      document.querySelectorAll('.chat-lang-dropdown').forEach(function(d) {
+        d.classList.remove('is-active');
+      });
+    });
+  }
+  
+  initLangSwitchers();
+
+  if (newChatBtn) {
+    newChatBtn.onclick = function() {
+        currentSessionId = null;
+        chatLog.innerHTML = '';
+        appendChat('bot', 'Chào bạn! Tôi đã sẵn sàng cho cuộc trò chuyện mới. Mình có thể giúp gì cho chuyến đi của bạn?');
+    };
+  }
+
   function setChatOpen(open) {
     if (!chatPanel) return;
     chatPanel.hidden = !open;
@@ -2436,31 +2565,15 @@
       btn.setAttribute("aria-expanded", open ? "true" : "false");
     });
     if (open && chatInput) chatInput.focus();
-    if (!open && chatInput) chatInput.blur();
   }
-  function isChatOpen() {
-    return chatPanel && !chatPanel.hidden;
-  }
+  
   chatToggleBtns.forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
-      setChatOpen(!isChatOpen());
+      setChatOpen(chatPanel.hidden);
     });
   });
-  document.addEventListener("click", function (e) {
-    if (!chatPanel || chatPanel.hidden) return;
-    var wrap = document.querySelector(".chat-fab-wrap");
-    if (wrap && !wrap.contains(e.target)) setChatOpen(false);
-  });
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    if (isChatOpen()) {
-      setChatOpen(false);
-      e.preventDefault();
-      return;
-    }
-    closeModals();
-  });
+
   if (chatForm && chatInput) {
     chatForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -2469,24 +2582,29 @@
       appendChat("user", msg);
       chatInput.value = "";
 
-      // Temporary loading message
+      // Track quest activity: Trò chuyện với AI
+      try {
+        var qa = JSON.parse(localStorage.getItem('wv_quest_activity') || '{}');
+        qa.dailyChat = 1;
+        localStorage.setItem('wv_quest_activity', JSON.stringify(qa));
+      } catch(e) {}
+
       var tempBubble = document.createElement("div");
       tempBubble.className = "chat-bubble chat-bubble--bot";
-      tempBubble.textContent = "Trợ lý đang gõ...";
+      tempBubble.textContent = "AI đang suy nghĩ...";
       chatLog.appendChild(tempBubble);
       chatLog.scrollTop = chatLog.scrollHeight;
-      botReply(msg).then(function (replyResult) {
+
+      botReply(msg).then(function (data) {
         chatLog.removeChild(tempBubble);
-        appendChat("bot", replyResult);
+        if (data.success) {
+          appendChat("bot", data.answer);
+          if (data.sessionId) currentSessionId = data.sessionId;
+        } else {
+          appendChat("bot", data.answer || "Trợ lý đang bận...");
+        }
       });
     });
-
-    // Initial bot welcome phrase
-    setTimeout(function () {
-      botReply("").then(function (initialMsg) {
-        appendChat("bot", initialMsg);
-      });
-    }, 500);
   }
 
   /* ——— Ticker Tự Động (Destinations) ——— */
@@ -2527,6 +2645,176 @@
         newsletterForm.reset();
       }
     });
+  }
+
+  /* --- Search Suggestions & History --- */
+  function initSearchSuggestions() {
+    var searchForm = document.getElementById('heroSearchForm');
+    var searchInput = document.getElementById('heroSearchInput');
+    var suggestionsBox = document.getElementById('searchSuggestions');
+    var suggestionList = document.getElementById('suggestionList');
+    var suggestionLabel = document.getElementById('suggestionLabel');
+    var clearAllBtn = document.getElementById('clearSearchHistory');
+
+    if (!searchForm || !searchInput) return;
+
+    function getHistory() {
+      return loadJSON(STORAGE.searchHistory, []);
+    }
+
+    function performSearch(query) {
+      if (!query) return;
+      
+      // Save to history
+      var history = getHistory();
+      var existingIdx = history.indexOf(query);
+      if (existingIdx !== -1) history.splice(existingIdx, 1);
+      history.unshift(query);
+      if (history.length > 10) history.pop();
+      saveJSON(STORAGE.searchHistory, history);
+
+      searchInput.value = query;
+      suggestionsBox.classList.remove('is-visible');
+
+      // Action based on current page
+      var destSection = document.getElementById('destinations');
+      if (destSection) {
+        // On Homepage: scroll and filter locally
+        destSection.scrollIntoView({ behavior: 'smooth' });
+        
+        // Trigger the internal filter logic of main.js
+        if (typeof applyDestFilters === 'function') {
+          applyDestFilters();
+        } else {
+          // Fallback if internal filter not exposed or different
+          window.location.href = 'places.html?search=' + encodeURIComponent(query);
+        }
+      } else {
+        // On other pages: redirect
+        window.location.href = 'places.html?search=' + encodeURIComponent(query);
+      }
+    }
+
+    function updateSuggestions(query) {
+      if (!suggestionList) return;
+      suggestionList.innerHTML = '';
+      var history = getHistory();
+      var normQuery = normalize(query);
+
+      if (!normQuery) {
+        // Show History OR Popular
+        if (history.length === 0) {
+          // Popular Fallback
+          suggestionLabel.textContent = 'Gợi ý phổ biến';
+          if (clearAllBtn) clearAllBtn.style.display = 'none';
+          var popular = ['Đà Lạt', 'Hội An', 'Phú Quốc', 'Hạ Long', 'Sa Pa'];
+          popular.forEach(function(item) {
+            var li = document.createElement('div');
+            li.className = 'search-item';
+            li.innerHTML = '<span class="search-item__history-icon">🔥</span>' +
+                           '<div class="search-item__info">' +
+                             '<span class="search-item__name">' + item + '</span>' +
+                           '</div>';
+            li.onclick = function() {
+              performSearch(item);
+            };
+            suggestionList.appendChild(li);
+          });
+        } else {
+          suggestionLabel.textContent = 'Lịch sử tìm kiếm';
+          if (clearAllBtn) clearAllBtn.style.display = 'block';
+          
+          history.forEach(function(item, idx) {
+            var li = document.createElement('div');
+            li.className = 'search-item';
+            li.innerHTML = '<span class="search-item__history-icon">🕒</span>' +
+                           '<div class="search-item__info">' +
+                             '<span class="search-item__name">' + item + '</span>' +
+                           '</div>' +
+                           '<button type="button" class="search-item__delete" data-delete-idx="' + idx + '" title="Xóa">×</button>';
+            
+            li.onclick = function(e) {
+              if (e.target.classList.contains('search-item__delete')) return;
+              performSearch(item);
+            };
+            suggestionList.appendChild(li);
+          });
+        }
+      } else {
+        // Show Place Suggestions
+        suggestionLabel.textContent = 'Gợi ý điểm đến';
+        if (clearAllBtn) clearAllBtn.style.display = 'none';
+
+        var matches = (PLACES || []).filter(function(p) {
+          return normalize(p.name).indexOf(normQuery) !== -1 || normalize(p.province).indexOf(normQuery) !== -1;
+        }).slice(0, 6);
+
+        if (matches.length === 0) {
+          suggestionList.innerHTML = '<div style="padding:1.5rem; text-align:center; color:var(--text-muted); font-size:0.9rem;">Không tìm thấy điểm đến phù hợp</div>';
+        } else {
+          matches.forEach(function(p) {
+            var li = document.createElement('div');
+            li.className = 'search-item';
+            li.innerHTML = '<img src="' + (p.image || 'assets/img/default-place.jpg') + '" class="search-item__img" alt="">' +
+                           '<div class="search-item__info">' +
+                             '<span class="search-item__name">' + p.name + '</span>' +
+                             '<span class="search-item__meta">📍 ' + (p.province || p.region) + '</span>' +
+                           '</div>';
+            li.onclick = function() {
+              performSearch(p.name);
+            };
+            suggestionList.appendChild(li);
+          });
+        }
+      }
+      suggestionsBox.classList.add('is-visible');
+    }
+
+    searchInput.addEventListener('focus', function() {
+      updateSuggestions(searchInput.value);
+    });
+
+    searchInput.addEventListener('click', function() {
+      updateSuggestions(searchInput.value);
+    });
+
+    searchInput.addEventListener('input', function() {
+      updateSuggestions(searchInput.value);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!searchForm.contains(e.target)) {
+        suggestionsBox.classList.remove('is-visible');
+      }
+    });
+
+    suggestionList.addEventListener('click', function(e) {
+      if (e.target.classList.contains('search-item__delete')) {
+        e.stopPropagation();
+        var idx = parseInt(e.target.getAttribute('data-delete-idx'));
+        var history = getHistory();
+        history.splice(idx, 1);
+        saveJSON(STORAGE.searchHistory, history);
+        updateSuggestions(searchInput.value);
+      }
+    });
+
+    if (clearAllBtn) {
+      clearAllBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirm('Bạn có chắc chắn muốn xóa toàn bộ lịch sử tìm kiếm?')) {
+          saveJSON(STORAGE.searchHistory, []);
+          updateSuggestions(searchInput.value);
+          if (typeof WanderUI !== 'undefined' && WanderUI.showToast) WanderUI.showToast('Đã xóa toàn bộ lịch sử tìm kiếm', 'info');
+        }
+      };
+    }
+
+    searchForm.onsubmit = function(e) {
+      e.preventDefault();
+      performSearch(searchInput.value);
+    };
   }
 
   /* ——— Boot ——— */
@@ -2571,23 +2859,32 @@
       }
 
       // 3. Xử lý nút ẩn/hiện danh sách chỉ đường
+      // 3. Xử lý nút toàn màn hình bản đồ
+      var mapFullscreenBtn = document.querySelector("[data-map-fullscreen-btn]");
+      var mapWrap = document.querySelector(".planner-map-wrap");
+      
+      if (mapFullscreenBtn && mapWrap) {
+        mapFullscreenBtn.addEventListener("click", function() {
+          var isFull = mapWrap.classList.toggle("is-fullscreen");
+          this.innerHTML = isFull ? "✖" : "⛶";
+          this.title = isFull ? "Thoát toàn màn hình" : "Toàn màn hình";
+          
+          // Đảm bảo Leaflet cập nhật lại kích thước mượt mà sau khi CSS transition chạy
+          setTimeout(function() {
+            if (tripMap) tripMap.invalidateSize({ animate: true });
+          }, 500);
+        });
+      }
+
       var toggleStepsBtn = document.querySelector("[data-toggle-steps]");
-      var mapStartBtn = document.querySelector("[data-map-start-btn]");
       var stepsPanel = document.querySelector("[data-route-steps]");
       function toggleStepPanel() {
         if (!stepsPanel) return;
         var isHidden = stepsPanel.hidden;
         stepsPanel.hidden = !isHidden;
         if (toggleStepsBtn) toggleStepsBtn.textContent = isHidden ? "✖ Ẩn danh sách chỉ đường" : "📋 Xem danh sách chỉ đường";
-        if (!isHidden) {
-          var pl = document.getElementById("planner");
-          if (pl) pl.scrollIntoView({
-            behavior: "smooth"
-          });
-        }
       }
       if (toggleStepsBtn) toggleStepsBtn.addEventListener("click", toggleStepPanel);
-      if (mapStartBtn) mapStartBtn.addEventListener("click", toggleStepPanel);
 
       // 4. Xử lý nút chọn phương tiện (Xe máy / Ô tô)
       var modeBtnEls = document.querySelectorAll("[data-mode]");
@@ -2610,32 +2907,8 @@
       var draft = loadJSON(STORAGE.tripDraft, null);
       if (tripNameInput && draft && draft.name) tripNameInput.value = draft.name;
       renderStopListUI();
-      // --- Hero V2 Search & Tags ---
-      var heroSearch = document.querySelector('.hero-v2__search');
-      if (heroSearch) {
-        heroSearch.onsubmit = function (e) {
-          e.preventDefault();
-          var input = heroSearch.querySelector('[data-search-input]');
-          var q = (input.value || '').trim();
-          if (q) {
-            // Simple scroll to destinations and filter
-            var destSection = document.getElementById('destinations');
-            if (destSection) {
-              destSection.scrollIntoView({
-                behavior: 'smooth'
-              });
-              // Trigger filter logic already existing in main.js
-              var searchInput = document.querySelector('[data-search-input]');
-              if (searchInput) {
-                searchInput.value = q;
-                searchInput.dispatchEvent(new Event('input', {
-                  bubbles: true
-                }));
-              }
-            }
-          }
-        };
-      }
+      initSearchSuggestions();
+      // --- Hero Tags ---
       document.querySelectorAll('.glass-chip').forEach(function (chip) {
         chip.onclick = function () {
           var tag = this.getAttribute('data-filter-tag');
@@ -2670,8 +2943,10 @@
 
   // Load everything on startup
   function startup() {
+    // Refresh UI immediately so user sees profile instead of "Tham gia" right away
+    refreshAuthUI();
+
     loadPlacesFromAPI().then(function () {
-      refreshAuthUI();
       if (typeof initNotificationPolling === 'function') initNotificationPolling();
       window.requestAnimationFrame(function () {
         redrawMap();
@@ -2679,10 +2954,17 @@
       var rankedInit = sortByScore(getPrefs());
       renderSmartResults(rankedInit);
       refreshAuthUI();
-      if (profileForm && getSession()) {
-        var p = getProfile();
-        if (profileForm.elements.displayName) profileForm.elements.displayName.value = p.displayName || "";
-        if (profileForm.elements.notes) profileForm.elements.notes.value = p.notes || "";
+      if (profileForm && getSession() && token) {
+        fetch('/api/auth/user/me', { headers: { 'x-auth-token': token } })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (d.success && d.user) {
+              var u = d.user;
+              if (profileForm.elements.displayName) profileForm.elements.displayName.value = u.displayName || u.name || "";
+              if (profileForm.elements.notes) profileForm.elements.notes.value = u.notes || "";
+              if (profileForm.elements.phone) profileForm.elements.phone.value = u.phone || "";
+            }
+          }).catch(function(){});
       }
 
       // -- Kết nối VoiceGuide với Chatbot --
@@ -2692,6 +2974,14 @@
         if (companionBtn) {
           companionBtn.addEventListener('click', function (e) {
             e.preventDefault();
+            if (!window.voiceGuide.recognition) {
+              if (window.SharedUI && window.SharedUI.showToast) {
+                window.SharedUI.showToast("Trình duyệt không hỗ trợ Mic hoặc chưa cấp quyền.", "error");
+              } else {
+                alert("Trình duyệt không hỗ trợ Mic.");
+              }
+              return;
+            }
             var active = this.classList.toggle('is-active');
             window.voiceGuide.setCompanionMode(active);
           });
@@ -2733,7 +3023,6 @@
   // Auto-open settings if requested via URL
   var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('openSettings') === 'true') {
-    // Wait a bit for auth to load
     setTimeout(function () {
       var sess = getSession();
       if (sess && sess.email && openSettingsBtn) {
@@ -2773,4 +3062,34 @@
   }
   
   startHeartbeat();
+
+  // Handle Hash Actions (for Quests redirection)
+  function handleHashActions() {
+    var hash = window.location.hash;
+    if (hash === '#chat') {
+      var chatBtn = document.querySelector('.chat-brain-toggle');
+      if (chatBtn) {
+        chatBtn.click();
+        setTimeout(function() {
+          var chatInput = document.querySelector('.chat-brain-input');
+          if (chatInput) chatInput.focus();
+        }, 300);
+      }
+    } else if (hash === '#destinations') {
+      var destSec = document.getElementById('destinations');
+      if (destSec) destSec.scrollIntoView({ behavior: 'smooth' });
+    } else if (hash === '#search') {
+      var searchSec = document.getElementById('smart-search');
+      if (searchSec) searchSec.scrollIntoView({ behavior: 'smooth' });
+    } else if (hash === '#reviews') {
+      var revSec = document.getElementById('reviews');
+      if (revSec) revSec.scrollIntoView({ behavior: 'smooth' });
+    } else if (hash === '#offers') {
+      var offerSec = document.getElementById('offers');
+      if (offerSec) offerSec.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  window.addEventListener('hashchange', handleHashActions);
+  setTimeout(handleHashActions, 1000); // Initial check
 })();

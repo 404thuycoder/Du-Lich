@@ -68,7 +68,7 @@
 
     // Update breadcrumb
     var bc = document.getElementById('biz-breadcrumb');
-    if (bc) bc.textContent = 'Partner Dashboard / ' + cfg.label;
+    if (bc) bc.textContent = 'Bảng điều khiển đối tác / ' + cfg.label;
 
     // Load data if needed
     if (cfg.load) cfg.load();

@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
   }],
   lastActive: { type: Date, default: Date.now },
+  points: { type: Number, default: 0 },
+  rank: { type: String, default: 'Đồng' },
+  rankTier: { type: String, default: 'I' },
+  claimedQuests: [String],
   createdAt: { type: Date, default: Date.now }
 });
 

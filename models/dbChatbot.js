@@ -12,7 +12,7 @@ const chatbotDb = mongoose.createConnection(chatbotUri, {
 });
 
 chatbotDb.on('connected', () => {
-  // Silent
+  console.log('✅ Chatbot MongoDB connected');
 });
 
 chatbotDb.on('error', (err) => {

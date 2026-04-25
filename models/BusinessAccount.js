@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const businessAccountSchema = new mongoose.Schema({
   name: { type: String, required: true },
   displayName: { type: String, default: '' },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   password: { type: String, required: true },
   avatar: { type: String, default: '' },
   phone: { type: String, default: '' },
